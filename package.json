@@ -16,7 +16,7 @@
     "run:cleaner": "tsx src/cli.ts run"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
+    "@types/node": "^25.6.0",
     "playwright": "^1.59.1",
     "tsx": "^4.21.0",
     "typescript": "^5.7.0",

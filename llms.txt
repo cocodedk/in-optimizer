@@ -1,0 +1,24 @@
+# in-optimizer
+
+> A local Playwright tool that deletes the user's own LinkedIn comments slowly, against a logged-in Chromium. No tokens, no third-party server, no password automation. Pacing target ~1 delete every 5–8s.
+
+The runner walks `linkedin.com/in/me/recent-activity/comments/`, clicks the per-comment menu, picks Delete, confirms, then sleeps. Defaults: ~1 delete per 5–8s with jitter, hourly cap 200, daily cap 500. State persists in `state/processed.json` so a run can be resumed; `state/log.jsonl` is the append-only audit trail.
+
+Selectors live in `src/selectors.ts` with a paired `docs/selectors.md` that documents *why* each selector was chosen and *when* it was last verified live. When LinkedIn breaks the runner, a diagnostic bundle (`state/diagnostics/<ts>-<reason>/`) is dropped containing `page.html`, `comment.html`, and `screenshot.png`.
+
+## Docs
+
+- [README](https://github.com/cocodedk/in-optimizer/blob/main/README.md): install, usage, quickstart
+- [CLAUDE.md](https://github.com/cocodedk/in-optimizer/blob/main/CLAUDE.md): architectural conventions, 200-LOC slice rule, selector protocol
+- [docs/selectors.md](https://github.com/cocodedk/in-optimizer/blob/main/docs/selectors.md): live LinkedIn DOM reference
+- [CONTRIBUTING.md](https://github.com/cocodedk/in-optimizer/blob/main/CONTRIBUTING.md): local setup, hooks, branch naming, PR checklist
+
+## Source
+
+- [src/](https://github.com/cocodedk/in-optimizer/tree/main/src): TypeScript ESM, Node ≥ 20, strict mode + `noUncheckedIndexedAccess`
+- [test/](https://github.com/cocodedk/in-optimizer/tree/main/test): Vitest unit + integration; integration loads `test/fixtures/comments.html` into real Chromium
+
+## Optional
+
+- [Plugin (`.claude-plugin/`)](https://github.com/cocodedk/in-optimizer/tree/main/.claude-plugin): local Claude Code plugin shipping per-surface skills (`comment`, `post`, `personal-profile`, `company-profile`)
+- [GitHub Pages](https://cocodedk.github.io/in-optimizer/): bilingual project site (English / فارسی)

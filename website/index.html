@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<!-- SEO keywords:
+     primary:   delete linkedin comments
+     secondary: linkedin cleanup tool, linkedin comment scrubber, playwright linkedin
+     intent:    transactional (download / install) + informational (how it works)
+-->
+
+<title>in-optimizer: delete your LinkedIn comments, slowly</title>
+<meta name="description" content="A local Playwright tool that deletes your own LinkedIn comments. Slowly, against your own logged-in browser. No tokens, no third-party server, no password automation." />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://cocodedk.github.io/in-optimizer/" />
+
+<link rel="alternate" hreflang="en"        href="https://cocodedk.github.io/in-optimizer/" />
+<link rel="alternate" hreflang="fa"        href="https://cocodedk.github.io/in-optimizer/fa/" />
+<link rel="alternate" hreflang="x-default" href="https://cocodedk.github.io/in-optimizer/" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="in-optimizer" />
+<meta property="og:title" content="in-optimizer: delete your LinkedIn comments, slowly" />
+<meta property="og:description" content="A local Playwright tool that deletes your own LinkedIn comments slowly, against your own logged-in browser. No tokens, no third-party server." />
+<meta property="og:url" content="https://cocodedk.github.io/in-optimizer/" />
+<meta property="og:image" content="https://cocodedk.github.io/in-optimizer/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="A horizontal pace clock with brass tick marks fading rightward, beside the in-optimizer wordmark and the tagline 'delete your LinkedIn comments. slowly.'" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:locale:alternate" content="fa_IR" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="in-optimizer: delete your LinkedIn comments, slowly" />
+<meta name="twitter:description" content="A local Playwright tool that deletes your own LinkedIn comments slowly, against your own logged-in browser." />
+<meta name="twitter:image" content="https://cocodedk.github.io/in-optimizer/og.png" />
+<meta name="twitter:image:alt" content="The in-optimizer pace clock and wordmark." />
+
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" />
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "in-optimizer",
+  "description": "A local Playwright tool that deletes your own LinkedIn comments slowly, against your own logged-in browser. No tokens, no third-party server, no password automation.",
+  "url": "https://cocodedk.github.io/in-optimizer/",
+  "downloadUrl": "https://github.com/cocodedk/in-optimizer",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Linux, macOS, Windows",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": {
+    "@type": "Person",
+    "name": "Babak Bandpey",
+    "url": "https://cocode.dk",
+    "sameAs": ["https://linkedin.com/in/babakbandpey", "https://github.com/cocodedk"]
+  },
+  "codeRepository": "https://github.com/cocodedk/in-optimizer",
+  "license": "https://www.apache.org/licenses/LICENSE-2.0"
+}
+</script>
+</head>
+
+<body>
+<div class="frame">
+
+<nav class="nav">
+  <a class="wordmark" href="/in-optimizer/">in-optimizer</a>
+  <a class="lang-switch" href="fa/" hreflang="fa" lang="fa">فارسی</a>
+</nav>
+
+<main>
+
+<section class="hero">
+  <div>
+    <h1>Delete your LinkedIn comments. <em>Slowly.</em></h1>
+    <p class="lead">A local Playwright tool that drives your own logged-in Chromium. No tokens, no third-party server, no password automation.</p>
+  </div>
+  <div class="instrument" aria-hidden="true">
+    <svg class="pace-clock" viewBox="0 0 480 24" preserveAspectRatio="none" role="presentation">
+      <line x1="0" y1="12" x2="480" y2="12" stroke="#2A2D38" stroke-width="1"/>
+      <line x1="20"  y1="2" x2="20"  y2="22" stroke="#C9A227" stroke-width="2" opacity="1.00"/>
+      <line x1="60"  y1="2" x2="60"  y2="22" stroke="#C9A227" stroke-width="2" opacity="0.95"/>
+      <line x1="100" y1="2" x2="100" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.88"/>
+      <line x1="140" y1="2" x2="140" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.78"/>
+      <line x1="180" y1="2" x2="180" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.66"/>
+      <line x1="220" y1="2" x2="220" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.54"/>
+      <line x1="260" y1="2" x2="260" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.42"/>
+      <line x1="300" y1="2" x2="300" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.30"/>
+      <line x1="340" y1="2" x2="340" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.20"/>
+      <line x1="380" y1="2" x2="380" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.12"/>
+      <line x1="420" y1="2" x2="420" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.06"/>
+      <line x1="460" y1="2" x2="460" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.02"/>
+    </svg>
+    <dl class="readout">
+      <dt>Pace</dt>     <dd>1 / 6.2 s ± jitter</dd>
+      <dt>Caps</dt>     <dd>200 hourly · 500 daily</dd>
+      <dt>Profile</dt>  <dd>local · no token · no proxy</dd>
+    </dl>
+  </div>
+</section>
+
+<section>
+  <h2>What it does</h2>
+  <p>It opens your browser. It walks to your activity-comments page. It clicks the menu on each comment. It picks <kbd>Delete</kbd>. It confirms. It waits five to eight seconds. It does that again. The point is that it should not look like a script.</p>
+</section>
+
+<section class="does-not">
+  <p class="eyebrow">What it does not do</p>
+  <h2>By design</h2>
+  <ul class="bare">
+    <li>No API tokens. Cookies stay in your own browser profile directory.</li>
+    <li>No third-party server. The code runs on your machine, against your account.</li>
+    <li>No password automation. You sign in by hand. Once.</li>
+    <li>No CAPTCHA solver, no headless-stealth shim, no proxy rotator. Out of scope.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>How it works</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="num">I.</div>
+      <div>
+        <h3>Sign in once</h3>
+        <p><code>npm run login</code> opens Chromium against a local profile directory. You sign in. The script saves the session and closes itself.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">II.</div>
+      <div>
+        <h3>Dry-run first</h3>
+        <p><code>npm run run:cleaner -- --dry-run</code> enumerates what it would delete and writes nothing. Read the output. Decide what to skip.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">III.</div>
+      <div>
+        <h3>Run, slowly</h3>
+        <p>Default pacing is one delete every five to eight seconds, capped at 200 per hour and 500 per day. State persists in <code>state/processed.json</code> so you can stop and resume.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Install</h2>
+  <p>Node 20 or newer. Then:</p>
+<pre class="code"><span class="comment"># clone &amp; set up</span>
+git clone https://github.com/cocodedk/in-optimizer.git
+cd in-optimizer
+npm install
+npx playwright install chromium
+
+<span class="comment"># sign in once (manual, in the opened window)</span>
+npm run login
+
+<span class="comment"># enumerate what would be deleted</span>
+npm run run:cleaner -- --dry-run
+
+<span class="comment"># delete, slowly</span>
+npm run run:cleaner</pre>
+</section>
+
+<section>
+  <h2>Architecture</h2>
+  <p>Each module sits under 200 lines. Selectors live in one file; when LinkedIn renames a class, you update one place.</p>
+<pre class="tree"><span class="file">src/</span>
+  pace.ts            <span class="arrow">←</span> <span class="desc">jittered delays, seeded RNG</span>
+  scheduler.ts       <span class="arrow">←</span> <span class="desc">hourly &amp; daily caps</span>
+  state.ts           <span class="arrow">←</span> <span class="desc">jsonl log + processed-set + atomic flush</span>
+  selectors.ts       <span class="arrow">←</span> <span class="desc">central LinkedIn DOM selectors</span>
+  commentDetector.ts <span class="arrow">←</span> <span class="desc">enumerate own comments</span>
+  delete.ts          <span class="arrow">←</span> <span class="desc">click menu → confirm</span>
+  scroll.ts          <span class="arrow">←</span> <span class="desc">infinite-scroll + show-more</span>
+  runner.ts          <span class="arrow">←</span> <span class="desc">orchestration</span></pre>
+</section>
+
+<section>
+  <h2>Author</h2>
+  <div class="author">
+    <span class="name">Babak Bandpey</span>
+    <span class="meta">
+      <a href="https://cocode.dk" target="_blank" rel="noreferrer">cocode.dk</a>
+       ·
+      <a href="https://linkedin.com/in/babakbandpey" target="_blank" rel="noreferrer">LinkedIn</a>
+       ·
+      <a href="https://github.com/cocodedk" target="_blank" rel="noreferrer">GitHub</a>
+    </span>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>Apache-2.0 &nbsp;|&nbsp; © 2026 <a href="https://cocode.dk" target="_blank" rel="noreferrer">Cocode</a> &nbsp;|&nbsp; Created by <a href="https://linkedin.com/in/babakbandpey" target="_blank" rel="noreferrer">Babak Bandpey</a></p>
+</footer>
+
+</div>
+</body>
+</html>

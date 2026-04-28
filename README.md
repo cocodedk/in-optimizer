@@ -10,12 +10,17 @@ LinkedIn's automation defenses.
 Sister project: [`x-cleaner`](../x-cleaner) (same approach for X/Twitter
 replies). The architecture and conventions here mirror it deliberately.
 
+## Website
+
+- [English](https://cocodedk.github.io/in-optimizer/)
+- [فارسی (Persian)](https://cocodedk.github.io/in-optimizer/fa/)
+
 ## Status
 
-v1 deletes comments listed on `https://www.linkedin.com/in/me/recent-activity/comments/`.
-Selectors are an initial best-guess — verify on first dry-run by inspecting
-the diagnostic bundle and updating `src/selectors.ts` + `docs/selectors.md`
-together.
+Selectors verified live on 2026-04-28 (see `docs/selectors.md`). v1 deletes
+comments listed on `https://www.linkedin.com/in/me/recent-activity/comments/`,
+including a `--collect=<path>` mode that dumps the queue to JSON for review
+and a `--only-ids=<path>` mode that acts on an approved subset.
 
 ## What's in the box
 
@@ -152,6 +157,15 @@ conservative than `x-cleaner`. Tune via the `Scheduler` config in
 
 ## Docs
 
-- [`docs/selectors.md`](docs/selectors.md) — LinkedIn DOM reference (needs
-  live verification on first dry-run)
+- [`docs/selectors.md`](docs/selectors.md) — LinkedIn DOM reference (live-verified 2026-04-28)
 - [`CLAUDE.md`](CLAUDE.md) — conventions for Claude when working in this repo
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — local setup, hooks, branch naming, PR checklist
+- [`SECURITY.md`](SECURITY.md) — vulnerability reporting
+
+## Author
+
+**Babak Bandpey** — [cocode.dk](https://cocode.dk) | [LinkedIn](https://linkedin.com/in/babakbandpey) | [GitHub](https://github.com/cocodedk)
+
+## License
+
+Apache-2.0 | © 2026 [Cocode](https://cocode.dk) | Created by [Babak Bandpey](https://linkedin.com/in/babakbandpey)

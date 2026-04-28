@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>in-optimizer OG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1200px; height: 630px; background: #0F1116; color: #E8E5DC; }
+  body {
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 64px 72px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr auto;
+    gap: 28px;
+    overflow: hidden;
+  }
+  .mark { grid-column: 1; grid-row: 1; }
+  .mark svg { width: 96px; height: 96px; }
+  .right { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+  .right svg { width: 100%; height: 96px; display: block; }
+  .center {
+    grid-column: 1 / span 2;
+    grid-row: 2;
+    align-self: center;
+    margin-top: 8px;
+  }
+  .wordmark {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 156px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: #E8E5DC;
+  }
+  .wordmark em { color: #C9A227; font-style: italic; }
+  .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 400;
+    font-size: 30px;
+    line-height: 1.4;
+    color: #A8A39A;
+    margin-top: 18px;
+    letter-spacing: 0.005em;
+  }
+  .tag span.b { color: #E8E5DC; }
+  .footer {
+    grid-column: 1 / span 2;
+    grid-row: 3;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    font-size: 18px;
+    color: #A8A39A;
+    letter-spacing: 0.04em;
+  }
+  .footer a { color: #A8A39A; text-decoration: none; }
+</style>
+</head>
+<body>
+  <div class="mark">
+    <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+      <rect width="32" height="32" rx="6" fill="#0F1116" stroke="#2A2D38" stroke-width="1"/>
+      <line x1="11" y1="7" x2="11" y2="25" stroke="#E8E5DC" stroke-width="1.5"/>
+      <line x1="11" y1="11" x2="18" y2="11" stroke="#C9A227" stroke-width="1.6"/>
+      <line x1="11" y1="17" x2="20" y2="17" stroke="#C9A227" stroke-width="1.6"/>
+      <line x1="11" y1="23" x2="22" y2="23" stroke="#C9A227" stroke-width="1.6"/>
+    </svg>
+  </div>
+
+  <div class="right">
+    <svg viewBox="0 0 480 24" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="0" y1="12" x2="480" y2="12" stroke="#2A2D38" stroke-width="1"/>
+      <line x1="20"  y1="2" x2="20"  y2="22" stroke="#C9A227" stroke-width="2" opacity="1.00"/>
+      <line x1="60"  y1="2" x2="60"  y2="22" stroke="#C9A227" stroke-width="2" opacity="0.95"/>
+      <line x1="100" y1="2" x2="100" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.88"/>
+      <line x1="140" y1="2" x2="140" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.78"/>
+      <line x1="180" y1="2" x2="180" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.66"/>
+      <line x1="220" y1="2" x2="220" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.54"/>
+      <line x1="260" y1="2" x2="260" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.42"/>
+      <line x1="300" y1="2" x2="300" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.30"/>
+      <line x1="340" y1="2" x2="340" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.20"/>
+      <line x1="380" y1="2" x2="380" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.12"/>
+      <line x1="420" y1="2" x2="420" y2="22" stroke="#C9A227" stroke-width="2" opacity="0.06"/>
+    </svg>
+  </div>
+
+  <div class="center">
+    <div class="wordmark">in-optimizer</div>
+    <div class="tag">delete your LinkedIn comments. <span class="b">slowly.</span></div>
+  </div>
+
+  <div class="footer">
+    <span>Babak Bandpey · cocode.dk · Apache-2.0</span>
+    <span>github.com/cocodedk/in-optimizer</span>
+  </div>
+</body>
+</html>

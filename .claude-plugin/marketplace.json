@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "in-optimize-local",
+  "description": "Local marketplace shipping the in-optimize plugin alongside its source code.",
+  "owner": {
+    "name": "Babak Bandpey",
+    "email": "bb@cocode.dk"
+  },
+  "plugins": [
+    {
+      "name": "in-optimize",
+      "source": "./plugins/in-optimize",
+      "description": "LinkedIn surface automation: comment cleaner, post cleaner, personal/company profile audits."
+    }
+  ]
+}

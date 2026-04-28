@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+# Smoke check for in-optimizer: type-check + unit/integration tests.
+# Mirrors what CI runs on every push.
+npm run typecheck
+npm test -- --run

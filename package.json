@@ -1,0 +1,25 @@
+{
+  "name": "in-optimizer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "start": "tsx src/cli.ts",
+    "login": "tsx src/cli.ts login",
+    "probe": "tsx src/cli.ts probe",
+    "run:cleaner": "tsx src/cli.ts run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "playwright": "^1.59.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "in-optimize",
+  "version": "0.1.0",
+  "description": "LinkedIn surface automation: comment cleaner, post cleaner, personal/company profile audits and edits. Wraps the Playwright drivers in src/ with per-surface skills.",
+  "author": {
+    "name": "Babak Bandpey",
+    "email": "bb@cocode.dk"
+  }
+}

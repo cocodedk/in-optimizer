@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Fixture: LinkedIn activity → Comments</title>
+  </head>
+  <body>
+    <main>
+      <section aria-label="Your comments">
+        <!-- Comment 1: typical mine card with URN + permalink + author header -->
+        <article
+          class="comments-comment-entity"
+          data-urn="urn:li:comment:(activity:7000000000000000001,7000000000000000010)"
+        >
+          <header>
+            <a href="/in/me/">Babak Bandpey</a>
+            <span>• You</span>
+            <span>Security Consultant</span>
+            <span>2d</span>
+          </header>
+          <div class="comments-comment-item__main-content">
+            Great breakdown of the architecture — saved for later reference.
+          </div>
+          <a href="/feed/update/urn:li:activity:7000000000000000001/">View post</a>
+          <button aria-label="Open options for this comment">…</button>
+        </article>
+
+        <!-- Comment 2: alternate selector path (data-id with fsd_comment URN), still mine -->
+        <div data-id="urn:li:fsd_comment:(7000000000000000020,urn:li:activity:7000000000000000002)">
+          <header>
+            <a href="/in/me/">Babak Bandpey</a>
+            <span>• You</span>
+          </header>
+          <div class="comments-comment-item__main-content">
+            Totally agree, this is the trade-off no one talks about.
+          </div>
+          <a href="/feed/update/urn:li:activity:7000000000000000002/">View post</a>
+          <button aria-label="Open control menu">…</button>
+        </div>
+
+        <!-- Comment 3: minimal mine, no URN — should fall back to snippet hash -->
+        <article class="comments-comment-entity">
+          <header>
+            <a href="/in/me/">Babak Bandpey</a>
+            <span>• You</span>
+          </header>
+          <div class="comments-comment-item__main-content">
+            Short take. Good thread.
+          </div>
+          <button aria-label="Open options">…</button>
+        </article>
+
+        <!-- Duplicate of Comment 1 — should de-duplicate by URN -->
+        <article
+          class="comments-comment-entity"
+          data-urn="urn:li:comment:(activity:7000000000000000001,7000000000000000010)"
+        >
+          <header>
+            <a href="/in/me/">Babak Bandpey</a>
+            <span>• You</span>
+          </header>
+          <div class="comments-comment-item__main-content">
+            (duplicate render)
+          </div>
+        </article>
+
+        <!-- Comment 4: someone else's reply on my thread — must be filtered out -->
+        <article
+          class="comments-comment-entity"
+          data-urn="urn:li:comment:(activity:7000000000000000001,7000000000000000099)"
+        >
+          <header>
+            <a href="/in/jane-doe/">Jane Doe</a>
+            <span>• 2nd</span>
+            <span>Engineering Manager</span>
+            <span>1d</span>
+          </header>
+          <div class="comments-comment-item__main-content">
+            Counterpoint — you're underestimating the maintenance cost.
+          </div>
+        </article>
+
+        <!-- Comment 5: someone else's PARENT comment that nests my reply.
+             The parent header is "• 2nd" but the nested reply's "• You"
+             badge would leak into the parent's recursive textContent —
+             must still be filtered out. -->
+        <article
+          class="comments-comment-entity"
+          data-urn="urn:li:comment:(activity:7000000000000000003,7000000000000000111)"
+        >
+          <header>
+            <a href="/in/john-roe/">John Roe</a>
+            <span>• 2nd</span>
+            <span>Sales Director</span>
+            <span>3d</span>
+          </header>
+          <div class="comments-comment-item__main-content">
+            Bold claim. I'll believe it when I see the data.
+          </div>
+          <!-- Nested reply by me — picked up as its own card by the loop. -->
+          <article
+            class="comments-comment-entity"
+            data-urn="urn:li:comment:(activity:7000000000000000003,7000000000000000222)"
+          >
+            <header>
+              <a href="/in/me/">Babak Bandpey</a>
+              <span>• You</span>
+            </header>
+            <div class="comments-comment-item__main-content">
+              Sources are public. Look up the FDA filing.
+            </div>
+          </article>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

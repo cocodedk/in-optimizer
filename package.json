@@ -13,7 +13,8 @@
     "start": "tsx src/cli.ts",
     "login": "tsx src/cli.ts login",
     "probe": "tsx src/cli.ts probe",
-    "run:cleaner": "tsx src/cli.ts run"
+    "run:cleaner": "tsx src/cli.ts run",
+    "cyber-news": "tsx src/cli-cybernews.ts"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

@@ -70,6 +70,7 @@ export class CyberNewsState {
   }
 
   markPosted(id: string, record: Omit<PostRecord, "postedAt"> & { postedAt?: string }): void {
+    if (this.isTerminal(id)) return;
     this.posted.set(id, { postedAt: new Date().toISOString(), ...record });
   }
 

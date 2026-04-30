@@ -56,6 +56,7 @@ export class State {
   }
 
   markProcessed(id: string, outcome: Outcome): void {
+    if (this.isTerminal(id)) return;
     this.processed.set(id, outcome);
   }
 

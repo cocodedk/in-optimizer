@@ -22,10 +22,21 @@ export type Tweet = {
   url: string;
 };
 
-/** Compute the token the syndication endpoint expects. Empirical formula. */
+/**
+ * Compute the token the syndication endpoint expects. Empirical formula:
+ * `((id / 1e15) * π).toString(36)` with zeros and the decimal point stripped.
+ *
+ * Direct `Number(id)` loses precision on 19-digit snowflake IDs. We split via
+ * BigInt into the high (id / 1e9) and low (id mod 1e9) parts so each piece
+ * fits inside a safe integer before being recombined.
+ */
 export function computeToken(id: string): string {
-  const n = Number(id);
-  return ((n / 1e15) * Math.PI).toString(36).replace(/(0+|\.)/g, "");
+  const big = BigInt(id);
+  const div = 1_000_000_000n; // 1e9
+  const highInt = Number(big / div);
+  const lowFrac = Number(big % div) / 1e9;
+  const id1e15 = (highInt + lowFrac) / 1e6;
+  return (id1e15 * Math.PI).toString(36).replace(/(0+|\.)/g, "");
 }
 
 export function syndicationUrl(id: string, lang = "en"): string {

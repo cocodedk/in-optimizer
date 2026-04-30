@@ -113,10 +113,15 @@ describe("newSince", () => {
     expect(newSince(ids, undefined)).toEqual(ids);
   });
 
-  it("compares lexicographically (works for snowflake numeric IDs of equal length)", () => {
+  it("compares numerically via BigInt across mixed-length IDs", () => {
     const ids = [{ id: "1864000000000000001" }, { id: "1864000000000000010" }];
     expect(newSince(ids, "1864000000000000005").map((t) => t.id)).toEqual([
       "1864000000000000010",
     ]);
+  });
+
+  it("BigInt compare puts longer numbers above shorter ones (where lex would fail)", () => {
+    const ids = [{ id: "9" }, { id: "100" }];
+    expect(newSince(ids, "50").map((t) => t.id)).toEqual(["100"]);
   });
 });

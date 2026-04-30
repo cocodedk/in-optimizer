@@ -20,7 +20,6 @@ export type PostFlowOpts = {
   stateDir: string;
   profileDir: string;
   severity?: Severity;
-  liUrlOnly?: boolean;
   autoPost: boolean;
   headless: boolean;
   seed: number;

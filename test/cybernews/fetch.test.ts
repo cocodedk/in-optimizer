@@ -10,6 +10,13 @@ describe("computeToken", () => {
     const t = computeToken("1864123456789012345");
     expect(t).toMatch(/^[a-z0-9]+$/);
   });
+
+  it("survives 19-digit snowflake IDs without Number precision loss", () => {
+    // Direct Number(id) rounds 1864123456789012345 → 1864123456789012200
+    // and produces a different last char of the token. The BigInt-split path
+    // returns the correct token for the actual id value.
+    expect(computeToken("1864123456789012345")).toBe("4iobe9alcmp");
+  });
 });
 
 describe("syndicationUrl", () => {

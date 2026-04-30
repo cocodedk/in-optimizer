@@ -96,12 +96,20 @@ export class CyberNewsState {
     return out;
   }
 
-  /** Sorted-descending tweet IDs we've already touched (any outcome). */
+  /** Tweet IDs we've already touched (any outcome), sorted descending by BigInt. */
   knownIds(): string[] {
-    return [...this.posted.keys()].sort((a, b) => (a < b ? 1 : -1));
+    return [...this.posted.keys()].sort((a, b) => {
+      try {
+        const ai = BigInt(a);
+        const bi = BigInt(b);
+        return ai > bi ? -1 : ai < bi ? 1 : 0;
+      } catch {
+        return a < b ? 1 : a > b ? -1 : 0;
+      }
+    });
   }
 
-  /** Highest tweet ID we've seen (lexicographic = numeric on snowflakes). */
+  /** Highest tweet ID we've seen (BigInt-compared, safe for mixed lengths). */
   highWaterMark(): string | undefined {
     return this.knownIds()[0];
   }

@@ -108,20 +108,20 @@ describe("CyberNewsState.postedToday", () => {
     const noon = "2026-04-30T12:00:00Z";
     const earlier = "2026-04-30T07:00:00Z";
     const yesterday = "2026-04-29T12:00:00Z";
-    s["posted"].set("a", { outcome: "posted", postedAt: noon });
-    s["posted"].set("b", { outcome: "posted", postedAt: earlier });
-    s["posted"].set("c", { outcome: "posted", postedAt: yesterday });
-    s["posted"].set("d", { outcome: "skipped", postedAt: noon });
-    s["posted"].set("e", { outcome: "failed", postedAt: noon });
-    s["posted"].set("f", { outcome: "dryrun", postedAt: noon });
+    s["records"].set("a", { outcome: "posted", postedAt: noon });
+    s["records"].set("b", { outcome: "posted", postedAt: earlier });
+    s["records"].set("c", { outcome: "posted", postedAt: yesterday });
+    s["records"].set("d", { outcome: "skipped", postedAt: noon });
+    s["records"].set("e", { outcome: "failed", postedAt: noon });
+    s["records"].set("f", { outcome: "dryrun", postedAt: noon });
     expect(s.postedToday(new Date(noon))).toBe(2);
   });
 
   it("ignores invalid postedAt timestamps", () => {
     const dir = newDir();
     const s = new CyberNewsState(dir);
-    s["posted"].set("a", { outcome: "posted", postedAt: "not-a-date" });
-    s["posted"].set("b", { outcome: "posted", postedAt: "2026-04-30T12:00:00Z" });
+    s["records"].set("a", { outcome: "posted", postedAt: "not-a-date" });
+    s["records"].set("b", { outcome: "posted", postedAt: "2026-04-30T12:00:00Z" });
     expect(s.postedToday(new Date("2026-04-30T12:00:00Z"))).toBe(1);
   });
 
@@ -129,7 +129,7 @@ describe("CyberNewsState.postedToday", () => {
     const dir = newDir();
     const s = new CyberNewsState(dir);
     const justBefore = "2026-04-30T22:30:00Z";
-    s["posted"].set("a", { outcome: "posted", postedAt: justBefore });
+    s["records"].set("a", { outcome: "posted", postedAt: justBefore });
     expect(s.postedToday(new Date("2026-04-30T22:30:00Z"))).toBe(1);
     expect(s.postedToday(new Date("2026-05-01T22:30:00Z"))).toBe(0);
   });

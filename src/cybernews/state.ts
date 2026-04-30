@@ -1,12 +1,4 @@
-import {
-  mkdirSync,
-  appendFileSync,
-  writeFileSync,
-  readFileSync,
-  renameSync,
-  existsSync,
-} from "node:fs";
-import { join } from "node:path";
+import { JsonlStore } from "../state-base.ts";
 
 export type Outcome = "posted" | "skipped" | "failed" | "dryrun";
 
@@ -37,61 +29,38 @@ export type Summary = {
   dryrun: number;
 };
 
-export class CyberNewsState {
-  private readonly logPath: string;
-  private readonly postedPath: string;
-  private readonly tmpPath: string;
-  private posted: Map<string, PostRecord>;
-
+export class CyberNewsState extends JsonlStore<PostRecord> {
   constructor(dir: string) {
-    this.logPath = join(dir, "log.jsonl");
-    this.postedPath = join(dir, "posted.json");
-    this.tmpPath = join(dir, "posted.json.tmp");
-    mkdirSync(dir, { recursive: true });
-    this.posted = this.load();
-  }
-
-  private load(): Map<string, PostRecord> {
-    if (!existsSync(this.postedPath)) return new Map();
-    try {
-      const obj = JSON.parse(readFileSync(this.postedPath, "utf8")) as Record<
-        string,
-        PostRecord
-      >;
-      return new Map(Object.entries(obj));
-    } catch {
-      return new Map();
-    }
+    super(dir, "posted.json");
   }
 
   appendLog(entry: LogEntry): void {
-    const line = JSON.stringify({ ts: new Date().toISOString(), ...entry });
-    appendFileSync(this.logPath, line + "\n", "utf8");
+    this.appendLogLine(entry);
   }
 
   markPosted(id: string, record: Omit<PostRecord, "postedAt"> & { postedAt?: string }): void {
     if (this.isTerminal(id)) return;
-    this.posted.set(id, { postedAt: new Date().toISOString(), ...record });
+    this.records.set(id, { postedAt: new Date().toISOString(), ...record });
   }
 
   isPosted(id: string): boolean {
-    return this.posted.has(id);
+    return this.records.has(id);
   }
 
   recordFor(id: string): PostRecord | undefined {
-    return this.posted.get(id);
+    return this.records.get(id);
   }
 
   /** Terminal outcomes shouldn't be retried; "failed" can be retried. */
   isTerminal(id: string): boolean {
-    const r = this.posted.get(id);
+    const r = this.records.get(id);
     return r?.outcome === "posted" || r?.outcome === "skipped";
   }
 
   /** Iterate non-terminal "failed" entries (for retry pre-pass). */
   stuckFailures(): string[] {
     const out: string[] = [];
-    for (const [id, record] of this.posted.entries()) {
+    for (const [id, record] of this.records.entries()) {
       if (record.outcome === "failed") out.push(id);
     }
     return out;
@@ -104,7 +73,7 @@ export class CyberNewsState {
   postedToday(now: Date = new Date()): number {
     const today = localYmd(now);
     let count = 0;
-    for (const r of this.posted.values()) {
+    for (const r of this.records.values()) {
       if (r.outcome !== "posted") continue;
       const d = new Date(r.postedAt);
       if (Number.isNaN(d.getTime())) continue;
@@ -115,7 +84,7 @@ export class CyberNewsState {
 
   /** Tweet IDs we've already touched (any outcome), sorted descending by BigInt. */
   knownIds(): string[] {
-    return [...this.posted.keys()].sort((a, b) => {
+    return [...this.records.keys()].sort((a, b) => {
       try {
         const ai = BigInt(a);
         const bi = BigInt(b);
@@ -131,15 +100,9 @@ export class CyberNewsState {
     return this.knownIds()[0];
   }
 
-  flush(): void {
-    const obj = Object.fromEntries(this.posted);
-    writeFileSync(this.tmpPath, JSON.stringify(obj, null, 2), "utf8");
-    renameSync(this.tmpPath, this.postedPath);
-  }
-
   summary(): Summary {
     const s: Summary = { total: 0, posted: 0, skipped: 0, failed: 0, dryrun: 0 };
-    for (const r of this.posted.values()) {
+    for (const r of this.records.values()) {
       s.total++;
       s[r.outcome]++;
     }

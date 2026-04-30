@@ -96,6 +96,22 @@ export class CyberNewsState {
     return out;
   }
 
+  /**
+   * Number of `posted` records whose postedAt falls on the same local
+   * calendar day as `now` (default: today). Used by the daily-cap gate.
+   */
+  postedToday(now: Date = new Date()): number {
+    const today = localYmd(now);
+    let count = 0;
+    for (const r of this.posted.values()) {
+      if (r.outcome !== "posted") continue;
+      const d = new Date(r.postedAt);
+      if (Number.isNaN(d.getTime())) continue;
+      if (localYmd(d) === today) count++;
+    }
+    return count;
+  }
+
   /** Tweet IDs we've already touched (any outcome), sorted descending by BigInt. */
   knownIds(): string[] {
     return [...this.posted.keys()].sort((a, b) => {
@@ -128,4 +144,11 @@ export class CyberNewsState {
     }
     return s;
   }
+}
+
+function localYmd(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }

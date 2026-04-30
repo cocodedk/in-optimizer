@@ -21,20 +21,34 @@ Before doing anything else, ensure a recurring cron is scheduled so the loop con
 
 The cron only fires while a Claude REPL is running on this project. If the user closes Claude entirely, the loop stops. That's intentional — destructive posting needs a human at the confirm gate.
 
-## Cycle (one tweet)
+## Step 0.5 — daily-cap check (every invocation, before fetching)
+
+Run `npm run cyber-news -- status --json` and read `postedToday` and `dailyCap`. If `postedToday >= dailyCap` (default 3), **stop the cycle**. Print one line: `daily cap reached (N/cap) — skipping this tick`. Do nothing else; the cron will fire again later, and tomorrow the count resets.
+
+This avoids burning a discover/fetch quota on a cycle that can't post anyway. The CLI's `post` subcommand also enforces the cap at runtime (so a manual post or `--auto-post` cron tick can't bypass it without `--force`), but checking here saves the work.
 
 ## Cycle (one tweet)
 
 1. **Discover** — `npm run cyber-news -- discover --json` lists IDs newer than the high-water mark in `state/cybernews/posted.json`.
 2. **Pick one** — default = oldest of the new (FIFO). Skip retweets if `selfAuthored === false`.
 3. **Fetch** — `npm run cyber-news -- fetch --id=<ID> --media-out=state/cybernews/media/<ID>` writes media to disk and prints text + classification + hashtags.
-4. **Read & decide** — apply your judgment: is it worth posting at all? If not, mark `skipped` and move on.
+4. **Read & decide — strict curator rubric.** A tweet is worth a slot if **all three must-haves** hold:
+   - **Novelty.** Not "another phishing campaign", not a vendor announcement, not a re-write of an older story you've already covered. Compare against the last 7 days of `state/cybernews/log.jsonl` to check.
+   - **Audience fit.** A Danish dev, security lead, or IT manager would care. Generic US-only consumer-tech news doesn't pass.
+   - **Teachable angle.** The post can land a concrete lesson, action, or root-cause insight — not just a headline paraphrase. If the best Danish version you can write is "X happened", skip.
+
+   **Bonus signals** (push borderline candidates over the line): AI/ML-related, supply-chain, scales to many companies, has a memorable story hook (the goblin debugging post is a good example), or is a CVSS 9+ that affects tooling your audience uses.
+
+   **Auto-skip** any of: vendor PR, routine vuln-of-the-week with no Danish-business angle, duplicate angle to the last 3 posts, marketing/conference/CFP announcements.
+
+   If the tweet doesn't pass: don't write a draft; mark `skipped` with the reason in the log (`reason: "not-novel"`, `"audience-miss"`, `"no-teachable-angle"`, `"duplicate-angle"`, `"vendor-pr"`) via `state.markPosted(id, { outcome: "skipped", reason: ... })` and try the next candidate, OR end the cycle if no candidate qualifies.
+
 5. **Translate to simple Danish** — write a draft sized by severity (see *Severity shapes* below). Use `docs/cybernews-glossary.md` for term choices. Save as `state/cybernews/drafts/<ID>.md`.
 6. **Run `/humanizer-da` twice** — invoke the slash command on the draft file, twice in sequence. Each pass is independent; do not skip the second one.
 7. **Append hashtags** — at the bottom of the post body, append the hashtags from step 3 (already includes `#cybersikkerhed`).
 8. **Append source link** — bottom line: "Kilde: <tweet URL>".
 9. **Confirm** — print the final draft + media list to the user. Wait for explicit "ja" / "go" / "post". Until v0.2 there is no auto-post.
-10. **Post via Playwright** *(see "Posting" below — once wired)* — drives logged-in Chromium, attaches images, paces with `humanCursor`.
+10. **Post via Playwright** — drives logged-in Chromium, attaches images, paces with `humanCursor`.
 11. **Record** — call the state writer with `outcome: "posted"` and the LinkedIn URL.
 
 ## Severity shapes
@@ -64,10 +78,16 @@ Default behavior:
 - Image/video attached from `state/cybernews/media/<ID>/` (sorted by filename).
 - Pauses at the confirmation gate. Type `go` (or `y` / `yes` / `ja`) to submit. Anything else, including pressing ENTER alone or closing the terminal, aborts and records `skipped`.
 - Captures the resulting LinkedIn post URL from the success toast (or first-post permalink) into `posted.json`.
-- `--auto-post` skips the gate (use only after a clean dry-run on the same draft).
+- `--auto-post` skips the confirmation gate (use only after a clean dry-run on the same draft).
 - `--dry-run` prints the body + media list and records `dryrun` outcome without opening the browser.
+- `--daily-cap=N` overrides the 3-per-day cap (use `--daily-cap=0` to disable entirely).
+- `--force` bypasses the daily cap for one run (one-off emergencies — say, a genuine zero-day on a day you've already used your slots).
 
-Pacing rule (your responsibility, not the script's): cap 1 post / 2 hours, daily cap 8. The skill itself processes one tweet per invocation; the cadence comes from how often you re-trigger.
+Pacing rules:
+- **Daily cap: 3 posts per local day** (enforced by both the skill at Step 0.5 and the CLI at runtime).
+- **Inter-post pacing: ≥ 2 hours apart.** Self-armed by Step 0's cron. Closer than that and LinkedIn's burst-detection notices.
+
+The 2-hour cron and the daily cap together mean at most 12 ticks per day, of which up to 3 land posts. The other 9 ticks become low-cost no-ops — they hit Step 0.5, see the cap is full or no novel candidates exist, and exit.
 
 ## State
 

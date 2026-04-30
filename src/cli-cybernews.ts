@@ -25,6 +25,8 @@ type Args = {
   headless: boolean;
   dryRun: boolean;
   seed: number;
+  dailyCap: number;
+  force: boolean;
 };
 
 const SEVERITIES: readonly Severity[] = ["info", "notable", "critical", "zero-day"];
@@ -47,6 +49,8 @@ function parse(argv: string[]): Args {
     headless: false,
     dryRun: false,
     seed: Date.now() & 0xffff_ffff,
+    dailyCap: 3,
+    force: false,
   };
   if (!argv[0]) return a;
   const cmd = argv[0];
@@ -57,6 +61,8 @@ function parse(argv: string[]): Args {
     else if (v === "--auto-post") a.autoPost = true;
     else if (v === "--headless") a.headless = true;
     else if (v === "--dry-run") a.dryRun = true;
+    else if (v === "--force") a.force = true;
+    else if (v.startsWith("--daily-cap=")) a.dailyCap = Number(v.slice(12));
     else if (v.startsWith("--handle=")) a.handle = v.slice(9);
     else if (v.startsWith("--id=")) a.id = v.slice(5);
     else if (v.startsWith("--state-dir=")) a.stateDir = v.slice(12);
@@ -90,8 +96,11 @@ Usage:
         [--headless]                   hide the browser (NOT recommended)
         [--dry-run]                    print body + media list, don't open browser
         [--seed=N]                     RNG seed for reproducibility
+        [--daily-cap=N]                max posts per local day (default 3, 0 disables)
+        [--force]                      bypass the daily cap
   cyber-news status                    show summary of posted/skipped/failed
         [--state-dir=state/cybernews]
+        [--json]                       JSON output (includes postedToday)
   cyber-news help
 
 Notes:
@@ -147,13 +156,31 @@ async function cmdFetch(a: Args): Promise<number> {
 function cmdStatus(a: Args): number {
   const state = new CyberNewsState(a.stateDir);
   const s = state.summary();
-  console.log(`state:     ${a.stateDir}`);
-  console.log(`high-water: ${state.highWaterMark() ?? "(none)"}`);
-  console.log(`total:     ${s.total}`);
-  console.log(`  posted:  ${s.posted}`);
-  console.log(`  skipped: ${s.skipped}`);
-  console.log(`  failed:  ${s.failed}`);
-  console.log(`  dryrun:  ${s.dryrun}`);
+  const today = state.postedToday();
+  if (a.json) {
+    process.stdout.write(
+      JSON.stringify(
+        {
+          stateDir: a.stateDir,
+          highWaterMark: state.highWaterMark() ?? null,
+          summary: s,
+          postedToday: today,
+          dailyCap: a.dailyCap,
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+    return 0;
+  }
+  console.log(`state:        ${a.stateDir}`);
+  console.log(`high-water:   ${state.highWaterMark() ?? "(none)"}`);
+  console.log(`postedToday:  ${today} / cap=${a.dailyCap}`);
+  console.log(`total:        ${s.total}`);
+  console.log(`  posted:     ${s.posted}`);
+  console.log(`  skipped:    ${s.skipped}`);
+  console.log(`  failed:     ${s.failed}`);
+  console.log(`  dryrun:     ${s.dryrun}`);
   return 0;
 }
 
@@ -177,6 +204,8 @@ async function cmdPost(a: Args): Promise<number> {
     headless: a.headless,
     dryRun: a.dryRun,
     seed: a.seed,
+    dailyCap: a.dailyCap,
+    force: a.force,
   });
 }
 

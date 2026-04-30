@@ -12,7 +12,13 @@ import { jitter, type Rng } from "../pace.ts";
 import { FEED_URL, LI_SELECTORS } from "./selectors-li.ts";
 
 const SHORT_TIMEOUT = 8000;
-const MEDIA_TIMEOUT = 60_000;
+// Upper bound on how long we wait for the upload thumbnail to render.
+// The legacy selector list (`.share-images__image, .image-detour-container,
+// [data-test-id*="media-thumb" i]`) doesn't match the new shadow-DOM
+// composer, so we used to burn the full minute before proceeding. Shrink
+// to 12s so a missing selector costs ~12s instead of a minute. The new
+// composer attaches photos inline in 1-3s in practice.
+const MEDIA_TIMEOUT = 12_000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

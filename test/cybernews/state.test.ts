@@ -96,6 +96,45 @@ describe("CyberNewsState.highWaterMark", () => {
   });
 });
 
+describe("CyberNewsState.postedToday", () => {
+  it("returns 0 when state is empty", () => {
+    expect(new CyberNewsState(newDir()).postedToday(new Date("2026-04-30T10:00:00Z"))).toBe(0);
+  });
+
+  it("counts only `posted` outcomes from the same local date", () => {
+    const dir = newDir();
+    const s = new CyberNewsState(dir);
+    // local date = 2026-04-30 in any TZ that contains UTC noon on that day
+    const noon = "2026-04-30T12:00:00Z";
+    const earlier = "2026-04-30T07:00:00Z";
+    const yesterday = "2026-04-29T12:00:00Z";
+    s["posted"].set("a", { outcome: "posted", postedAt: noon });
+    s["posted"].set("b", { outcome: "posted", postedAt: earlier });
+    s["posted"].set("c", { outcome: "posted", postedAt: yesterday });
+    s["posted"].set("d", { outcome: "skipped", postedAt: noon });
+    s["posted"].set("e", { outcome: "failed", postedAt: noon });
+    s["posted"].set("f", { outcome: "dryrun", postedAt: noon });
+    expect(s.postedToday(new Date(noon))).toBe(2);
+  });
+
+  it("ignores invalid postedAt timestamps", () => {
+    const dir = newDir();
+    const s = new CyberNewsState(dir);
+    s["posted"].set("a", { outcome: "posted", postedAt: "not-a-date" });
+    s["posted"].set("b", { outcome: "posted", postedAt: "2026-04-30T12:00:00Z" });
+    expect(s.postedToday(new Date("2026-04-30T12:00:00Z"))).toBe(1);
+  });
+
+  it("rolls over at local midnight", () => {
+    const dir = newDir();
+    const s = new CyberNewsState(dir);
+    const justBefore = "2026-04-30T22:30:00Z";
+    s["posted"].set("a", { outcome: "posted", postedAt: justBefore });
+    expect(s.postedToday(new Date("2026-04-30T22:30:00Z"))).toBe(1);
+    expect(s.postedToday(new Date("2026-05-01T22:30:00Z"))).toBe(0);
+  });
+});
+
 describe("CyberNewsState.summary", () => {
   it("counts outcomes from in-memory state", () => {
     const dir = newDir();

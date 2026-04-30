@@ -24,6 +24,10 @@ export type PostFlowOpts = {
   headless: boolean;
   seed: number;
   dryRun: boolean;
+  /** Max posts per local calendar day. Default 3. Use 0 to disable. */
+  dailyCap: number;
+  /** Skip the daily-cap gate. */
+  force: boolean;
 };
 
 export async function runPostFlow(opts: PostFlowOpts): Promise<number> {
@@ -42,6 +46,15 @@ export async function runPostFlow(opts: PostFlowOpts): Promise<number> {
     const prior = state.recordFor(opts.id)!.outcome;
     console.error(`tweet ${opts.id} already ${prior}`);
     return 0;
+  }
+
+  // Daily cap gate (before any browser / draft work). Override with --force.
+  if (opts.dailyCap > 0 && !opts.force && !opts.dryRun) {
+    const today = state.postedToday();
+    if (today >= opts.dailyCap) {
+      console.error(`daily cap reached (${today}/${opts.dailyCap}) — skipping. Override with --force.`);
+      return 0;
+    }
   }
 
   if (opts.dryRun) {

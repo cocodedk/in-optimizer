@@ -73,8 +73,8 @@
 
 <section class="hero">
   <div>
-    <h1>کامنت‌های لینکدین خود را حذف کنید. <em>آرام.</em></h1>
-    <p class="lead">ابزاری محلی مبتنی بر Playwright که با مرورگر Chromium واردشده‌ی خودتان کار می‌کند. بدون توکن، بدون سرور شخص ثالث، بدون اتوماسیون پسورد.</p>
+    <h1>سطح لینکدین شما. <em>آرام.</em></h1>
+    <p class="lead">ابزاری محلی مبتنی بر Playwright که با مرورگر Chromium واردشده‌ی خودتان کار می‌کند. دو سطح: پاک‌سازی کامنت‌های قدیمی، و انتشار اخبار امنیت سایبری به زبان دانمارکی. بدون توکن، بدون سرور شخص ثالث، بدون اتوماسیون پسورد.</p>
   </div>
   <div class="instrument" aria-hidden="true">
     <svg class="pace-clock" viewBox="0 0 480 24" preserveAspectRatio="none" role="presentation">
@@ -163,17 +163,40 @@ npm run run:cleaner</pre>
 </section>
 
 <section>
+  <h2>سطح خواهر: cyber-news (دانمارکی)</h2>
+  <p>همان پروفایل محلی، در جهت معکوس. یک توییت عمومی امنیت سایبری را دریافت می‌کند، شدت آن را طبقه‌بندی می‌کند (info، notable، critical، zero-day)، به دانمارکی ساده ترجمه می‌کند، دو بار <code>/humanizer-da</code> را اجرا می‌کند، و همراه با تصاویر اصلی در فید لینکدین شما منتشر می‌کند. یک پست در هر فراخوانی، با دروازه‌ی تأیید قبل از کلیک پایانی. زنده‌سنجی شده در ۲۰۲۶-۰۴-۳۰.</p>
+<pre class="code"><span class="comment"># کشف شناسه‌های جدید از یک حساب عمومی</span>
+npm run cyber-news -- discover --handle=IntCyberDigest
+
+<span class="comment"># دریافت یک توییت (متن + رسانه + طبقه‌بندی)</span>
+npm run cyber-news -- fetch --id=&lt;TWEETID&gt; \
+  --media-out=state/cybernews/media/&lt;TWEETID&gt;
+
+<span class="comment"># انتشار (پس از نوشتن پیش‌نویس دانمارکی)</span>
+npm run cyber-news -- post --id=&lt;TWEETID&gt; \
+  --draft=state/cybernews/drafts/&lt;TWEETID&gt;.md \
+  --media-dir=state/cybernews/media/&lt;TWEETID&gt; \
+  --severity=zero-day</pre>
+</section>
+
+<section>
   <h2>معماری</h2>
-  <p>هر ماژول زیر ۲۰۰ خط است. سلکتورها در یک فایل قرار دارند؛ وقتی لینکدین یک کلاس را تغییر می‌دهد، فقط یک جا را به‌روزرسانی می‌کنید.</p>
+  <p>هر ماژول زیر ۲۰۰ خط است. سلکتورها در یک فایل برای هر سطح قرار دارند؛ وقتی لینکدین یک کلاس را تغییر می‌دهد، فقط یک جا را به‌روزرسانی می‌کنید.</p>
 <pre class="tree"><span class="file">src/</span>
   pace.ts            <span class="arrow">←</span> <span class="desc">تأخیرهای لرزشی، RNG با seed</span>
   scheduler.ts       <span class="arrow">←</span> <span class="desc">سقف ساعتی و روزانه</span>
   state.ts           <span class="arrow">←</span> <span class="desc">log + processed-set + flush اتمیک</span>
-  selectors.ts       <span class="arrow">←</span> <span class="desc">سلکتورهای DOM لینکدین</span>
+  selectors.ts       <span class="arrow">←</span> <span class="desc">سلکتورهای DOM پاک‌کننده‌ی کامنت</span>
   commentDetector.ts <span class="arrow">←</span> <span class="desc">شمارش کامنت‌های خودتان</span>
   delete.ts          <span class="arrow">←</span> <span class="desc">کلیک منو ← تأیید</span>
   scroll.ts          <span class="arrow">←</span> <span class="desc">پیمایش بی‌نهایت + show-more</span>
-  runner.ts          <span class="arrow">←</span> <span class="desc">هماهنگی</span></pre>
+  runner.ts          <span class="arrow">←</span> <span class="desc">هماهنگی پاک‌کننده</span>
+<span class="file">  cybernews/</span>
+    fetch.ts         <span class="arrow">←</span> <span class="desc">X syndication API + رسانه</span>
+    severity.ts      <span class="arrow">←</span> <span class="desc">zero-day | critical | notable | info</span>
+    hashtags.ts      <span class="arrow">←</span> <span class="desc">‎#cybersikkerhed + برچسب‌های موضوعی</span>
+    selectors-li.ts  <span class="arrow">←</span> <span class="desc">سلکتورهای کامپوزر (en + da)</span>
+    poster.ts        <span class="arrow">←</span> <span class="desc">Playwright نوشتن + پیوست + ارسال</span></pre>
 </section>
 
 <section>

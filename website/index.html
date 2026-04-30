@@ -79,8 +79,8 @@
 
 <section class="hero">
   <div>
-    <h1>Delete your LinkedIn comments. <em>Slowly.</em></h1>
-    <p class="lead">A local Playwright tool that drives your own logged-in Chromium. No tokens, no third-party server, no password automation.</p>
+    <h1>Your LinkedIn surface. <em>Slowly.</em></h1>
+    <p class="lead">A local Playwright tool that drives your own logged-in Chromium. Two surfaces: clean up old comments; post curated cybersecurity news in Danish. No tokens, no third-party server, no password automation.</p>
   </div>
   <div class="instrument" aria-hidden="true">
     <svg class="pace-clock" viewBox="0 0 480 24" preserveAspectRatio="none" role="presentation">
@@ -169,17 +169,40 @@ npm run run:cleaner</pre>
 </section>
 
 <section>
+  <h2>Sister surface: cyber-news (Danish)</h2>
+  <p>Same persistent profile, opposite direction. Fetch a public cybersecurity tweet, classify severity (info, notable, critical, zero-day), translate to simple Danish, run <code>/humanizer-da</code> twice, post to your feed with the original images. One post per invocation, with a confirmation gate before the destructive click. Live-verified on 2026-04-30.</p>
+<pre class="code"><span class="comment"># discover new IDs from a public handle</span>
+npm run cyber-news -- discover --handle=IntCyberDigest
+
+<span class="comment"># fetch one tweet (text + media + classification)</span>
+npm run cyber-news -- fetch --id=&lt;TWEETID&gt; \
+  --media-out=state/cybernews/media/&lt;TWEETID&gt;
+
+<span class="comment"># post (after writing the Danish draft)</span>
+npm run cyber-news -- post --id=&lt;TWEETID&gt; \
+  --draft=state/cybernews/drafts/&lt;TWEETID&gt;.md \
+  --media-dir=state/cybernews/media/&lt;TWEETID&gt; \
+  --severity=zero-day</pre>
+</section>
+
+<section>
   <h2>Architecture</h2>
-  <p>Each module sits under 200 lines. Selectors live in one file; when LinkedIn renames a class, you update one place.</p>
+  <p>Each module sits under 200 lines. Selectors live in one file per surface; when LinkedIn renames a class, you update one place.</p>
 <pre class="tree"><span class="file">src/</span>
   pace.ts            <span class="arrow">←</span> <span class="desc">jittered delays, seeded RNG</span>
   scheduler.ts       <span class="arrow">←</span> <span class="desc">hourly &amp; daily caps</span>
   state.ts           <span class="arrow">←</span> <span class="desc">jsonl log + processed-set + atomic flush</span>
-  selectors.ts       <span class="arrow">←</span> <span class="desc">central LinkedIn DOM selectors</span>
+  selectors.ts       <span class="arrow">←</span> <span class="desc">comment-cleaner DOM selectors</span>
   commentDetector.ts <span class="arrow">←</span> <span class="desc">enumerate own comments</span>
   delete.ts          <span class="arrow">←</span> <span class="desc">click menu → confirm</span>
   scroll.ts          <span class="arrow">←</span> <span class="desc">infinite-scroll + show-more</span>
-  runner.ts          <span class="arrow">←</span> <span class="desc">orchestration</span></pre>
+  runner.ts          <span class="arrow">←</span> <span class="desc">cleaner orchestration</span>
+<span class="file">  cybernews/</span>
+    fetch.ts         <span class="arrow">←</span> <span class="desc">X syndication API + media</span>
+    severity.ts      <span class="arrow">←</span> <span class="desc">zero-day | critical | notable | info</span>
+    hashtags.ts      <span class="arrow">←</span> <span class="desc">#cybersikkerhed + topical tags</span>
+    selectors-li.ts  <span class="arrow">←</span> <span class="desc">composer selectors (en + da)</span>
+    poster.ts        <span class="arrow">←</span> <span class="desc">Playwright compose + attach + submit</span></pre>
 </section>
 
 <section>

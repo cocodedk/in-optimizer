@@ -1,12 +1,27 @@
 ---
-description: Use when the user wants to translate a fresh @IntCyberDigest tweet (or any cybersecurity tweet) into a Danish LinkedIn post. Drives the discover → fetch → translate → /humanizer-da × 2 → confirm → post loop. Treats every cycle as one tweet at a time. Posting is gated behind explicit user confirmation.
+description: Use when the user wants to translate a fresh @IntCyberDigest tweet (or any cybersecurity tweet) into a Danish LinkedIn post. Drives the discover → fetch → translate → /humanizer-da × 2 → confirm → post loop. Treats every cycle as one tweet at a time. Posting is gated behind explicit user confirmation. Self-arms a 2-hour cron on first invocation so the loop continues without a separate /loop call.
 ---
 
 # Cyber-news → LinkedIn (Danish)
 
 Goal: turn cybersecurity news from `@IntCyberDigest` (or another handle) into a humanized Danish LinkedIn post, severity-shaped, with the original images, posted slowly through Playwright.
 
-Trigger model: user runs the skill in a session. Each invocation = one batch of tweets (up to `--limit`, default 1). Cadence (one post per 2 hours) is the user's responsibility, either by re-invoking, or by `/loop` / `CronCreate` wrapping the skill.
+## Step 0 — self-arm the 2-hour cron (every invocation)
+
+Before doing anything else, ensure a recurring cron is scheduled so the loop continues without the user calling `/loop` separately.
+
+1. Call `CronList`.
+2. If any existing job's prompt starts with `/in-optimize:cyber-news`, **skip** — already armed.
+3. Otherwise call `CronCreate` with:
+   - `cron="0 */2 * * *"` (every 2 hours, on the hour, UTC by the local cron runner)
+   - `prompt="/in-optimize:cyber-news"`
+   - `recurring=true`
+   - `durable=true` (persists to `.claude/scheduled_tasks.json` so it survives Claude restarts on the same machine)
+4. Confirm to the user in one line: cron armed / cron already armed.
+
+The cron only fires while a Claude REPL is running on this project. If the user closes Claude entirely, the loop stops. That's intentional — destructive posting needs a human at the confirm gate.
+
+## Cycle (one tweet)
 
 ## Cycle (one tweet)
 
@@ -94,5 +109,6 @@ All files ≤ 200 LOC.
 - **"check for new"** → run discover, print count + IDs.
 - **"do the next one"** → full cycle on the oldest unprocessed ID, stop at the confirm gate.
 - **"skip this"** → mark `skipped` with the reason, move to next.
-- **"loop hourly" / "every 2 hours"** → wrap the skill in `/loop` or `CronCreate`. Don't auto-post; the loop still goes through the confirm gate. (Or wait until poster.ts is wired and add `--auto-post` then.)
+- **"loop hourly" / "every 2 hours"** → already self-armed by Step 0. To change cadence, edit the cron in `.claude/scheduled_tasks.json` or run `CronList` + `CronDelete` then `CronCreate` with the new expression.
+- **"stop the loop"** → `CronList` to find the job ID, then `CronDelete` it. The skill itself doesn't auto-stop.
 - **"selectors broke"** → after poster.ts is wired, triage the diagnostic bundle in `state/cybernews/diagnostics/`.

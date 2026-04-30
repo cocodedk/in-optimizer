@@ -14,7 +14,9 @@ LinkedIn breaks something.
 `/in/me/` resolves to the logged-in user's profile, so this URL works for
 any account without needing a handle.
 
-## Comment card
+## Comment card (`card`, `nestedCard`)
+
+Top-level enumeration (`SELECTORS.card`):
 
 ```css
 article.comments-comment-entity,
@@ -22,12 +24,17 @@ article.comments-comment-entity,
 [data-urn^="urn:li:comment:"]
 ```
 
+Looser descendant filter (`SELECTORS.nestedCard`) — same shape minus the
+`article` tag prefix, so it matches nested replies that LinkedIn renders
+as `<div>` rather than `<article>`. Used by the detector when stripping
+nested reply cards from a cloned parent before testing authorship.
+
 LinkedIn has used at least two URN attributes (`data-urn`,
 `data-id`) and at least two URN flavors (`urn:li:comment:` legacy,
 `urn:li:fsd_comment:` newer-graph). The detector accepts all three so a
 schema flip on either dimension doesn't kill enumeration in one go.
 
-## Comment body
+## Comment body (`commentBody`)
 
 ```css
 .comments-comment-item__main-content,
@@ -46,6 +53,17 @@ Verified live: 2026-04-28 — the header-eats-snippet bug was visible on a
 real run; switching to the body element + 280-char cap produced readable
 snippets.
 
+## Permalink anchor (`permalinkActivity`, `permalinkUpdate`)
+
+```css
+a[href*="urn:li:activity"]   /* primary  — SELECTORS.permalinkActivity */
+a[href*="/feed/update/"]     /* fallback — SELECTORS.permalinkUpdate   */
+```
+
+The detector tries the primary form first, then the fallback. Most cards
+expose only one of the two; preserving fallback order keeps the captured
+permalink stable when both happen to be present.
+
 ## Authorship filter ("• You")
 
 The activity-comments page also surfaces other people's replies in the
@@ -59,7 +77,7 @@ this needs updating.
 
 ```css
 .comment-options-trigger button.artdeco-dropdown__trigger,
-.comment-options-trigger button,
+.comment-options-trigger button[aria-expanded],
 button:has(svg[aria-label*="options" i][aria-label*="comment" i]),
 button[aria-label*="options" i][aria-label*="comment" i],
 button[aria-label*="ction" i][aria-label*="omment" i],

@@ -21,7 +21,7 @@ type Args = {
 function parse(argv: string[]): Args {
   const a: Args = {
     cmd: "help",
-    dryRun: false,
+    dryRun: true,
     max: 100,
     profileDir: ".profile",
     stateDir: "state",
@@ -30,9 +30,12 @@ function parse(argv: string[]): Args {
   if (!argv[0]) return a;
   const cmd = argv[0];
   if (cmd === "login" || cmd === "run" || cmd === "probe" || cmd === "help") a.cmd = cmd;
+  let liveRequested = false;
+  let dryRunRequested = false;
   for (let i = 1; i < argv.length; i++) {
     const v = argv[i]!;
-    if (v === "--dry-run") a.dryRun = true;
+    if (v === "--dry-run") dryRunRequested = true;
+    else if (v === "--live") liveRequested = true;
     else if (v === "--headless") a.headless = true;
     else if (v.startsWith("--max=")) a.max = Number(v.slice(6));
     else if (v.startsWith("--limit=")) a.max = Number(v.slice(8));
@@ -41,6 +44,7 @@ function parse(argv: string[]): Args {
     else if (v.startsWith("--collect=")) a.collectPath = v.slice(10);
     else if (v.startsWith("--only-ids=")) a.onlyIdsPath = v.slice(11);
   }
+  if (liveRequested && !dryRunRequested) a.dryRun = false;
   if (a.collectPath) a.dryRun = true;
   return a;
 }
@@ -50,14 +54,18 @@ const HELP = `in-optimizer — delete your own LinkedIn comments, slowly.
 Usage:
   in-optimizer login                  open Chromium so you can sign in
   in-optimizer probe                  check whether the saved profile is logged in
-  in-optimizer run                    delete comments from /in/me/recent-activity/comments/
-        [--dry-run]                   list what would be deleted, don't click
+  in-optimizer run                    enumerate comments at /in/me/recent-activity/comments/
+                                      DEFAULT IS DRY-RUN — pass --live to actually delete
+        [--live]                      actually delete; without this, run only enumerates
+        [--dry-run]                   accepted for clarity / scripts; dry-run is the default
         [--max=N | --limit=N]         hard cap on items in this run (default 100)
         [--profile-dir=./.profile]    where browser profile lives
         [--state-dir=./state]         where logs/diagnostics go
         [--headless]                  hide the browser (NOT recommended)
-        [--collect=PATH]              write enumerated comments to PATH as JSON; implies --dry-run
+        [--collect=PATH]              write enumerated comments to PATH as JSON; forces dry-run
         [--only-ids=PATH]             only process comment ids listed in PATH (one per line)
+
+  If both --live and --dry-run are passed, dry-run wins (safer default).
 
 Defaults pace ~1 delete / 5–8 s, with a long break every 20 deletes, an hourly
 cap of 200, and a daily cap of 500. See README.md.`;

@@ -4,8 +4,30 @@
  * Source-of-truth: docs/selectors.md. Last verified live: 2026-04-28.
  */
 export const SELECTORS = {
-  /** Each comment card on the activity feed. */
+  /** Each comment card on the activity feed (top-level enumeration). */
   card: 'article.comments-comment-entity, [data-id^="urn:li:fsd_comment:"], [data-urn^="urn:li:comment:"]',
+  /**
+   * Looser descendant filter used when stripping nested reply cards from a
+   * cloned parent before testing authorship. Matches any tag, not just
+   * <article>, because nested replies may be rendered as <div>.
+   */
+  nestedCard:
+    '.comments-comment-entity, [data-id^="urn:li:fsd_comment:"], [data-urn^="urn:li:comment:"]',
+  /**
+   * Inner comment-body element. The card's full textContent includes a long
+   * author header (name + degree badge + title + relative time); pulling the
+   * body element gives a useful snippet.
+   */
+  commentBody:
+    '.comments-comment-item__main-content, .comments-comment-item-content-body',
+  /**
+   * Permalink anchor — primary form, points at an activity URN.
+   */
+  permalinkActivity: 'a[href*="urn:li:activity"]',
+  /**
+   * Permalink anchor — fallback form when the activity URN form is absent.
+   */
+  permalinkUpdate: 'a[href*="/feed/update/"]',
   /**
    * Trigger button that opens the per-comment "..." menu.
    *

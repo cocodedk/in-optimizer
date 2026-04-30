@@ -10,13 +10,20 @@ export type Comment = {
   snippet: string;
 };
 
+type DetectorArgs = {
+  cardSel: string;
+  nestedSel: string;
+  bodySel: string;
+  permalinkActivitySel: string;
+  permalinkUpdateSel: string;
+};
+
 /**
  * Body of the function we ship to the page. Plain ES5 so it survives
  * `new Function()` without TS-specific features. Returns one entry per
- * detected comment authored by the logged-in user.
- *
- * Selector strategy is intentionally tolerant: LinkedIn renames classes
- * frequently. We try several selectors and de-duplicate by URN.
+ * detected comment authored by the logged-in user. All LinkedIn selectors
+ * arrive via `args` from `src/selectors.ts` — keep this body free of inline
+ * selector strings.
  */
 const PAGE_FN_BODY = `
   function pickUrn(el) {
@@ -37,27 +44,24 @@ const PAGE_FN_BODY = `
   }
 
   function findPermalink(el) {
-    var a = el.querySelector('a[href*="urn:li:activity"]');
+    var a = el.querySelector(args.permalinkActivitySel);
     if (a) return a.getAttribute('href');
-    var b = el.querySelector('a[href*="/feed/update/"]');
+    var b = el.querySelector(args.permalinkUpdateSel);
     if (b) return b.getAttribute('href');
     return null;
   }
 
   function bodyText(el) {
-    var body = el.querySelector('.comments-comment-item__main-content, .comments-comment-item-content-body');
+    var body = el.querySelector(args.bodySel);
     var t = ((body || el).textContent || '').replace(/\\s+/g, ' ').trim();
     return t;
   }
 
   function isMine(el) {
-    // Check this card's own header only. textContent recurses into nested
-    // reply cards (a parent card containing my reply would otherwise inherit
-    // the nested "• You" badge), so we clone, strip nested .comments-comment-entity
-    // descendants, and only then test the remaining text.
+    // Strip nested reply cards before testing authorship — otherwise a parent
+    // card whose nested reply is mine inherits the nested "• You" badge.
     var clone = el.cloneNode(true);
-    var nestedSel = '.comments-comment-entity, [data-id^="urn:li:fsd_comment:"], [data-urn^="urn:li:comment:"]';
-    var nested = clone.querySelectorAll(nestedSel);
+    var nested = clone.querySelectorAll(args.nestedSel);
     for (var i = 0; i < nested.length; i++) {
       if (nested[i].parentNode) nested[i].parentNode.removeChild(nested[i]);
     }
@@ -78,8 +82,7 @@ const PAGE_FN_BODY = `
 
   var seen = {};
   var out = [];
-  var sel = 'article.comments-comment-entity, [data-id^="urn:li:fsd_comment:"], [data-urn^="urn:li:comment:"]';
-  var nodes = Array.from(document.querySelectorAll(sel));
+  var nodes = Array.from(document.querySelectorAll(args.cardSel));
   for (var n = 0; n < nodes.length; n++) {
     var card = nodes[n];
     if (!isMine(card)) continue;
@@ -94,10 +97,19 @@ const PAGE_FN_BODY = `
   return out;
 `;
 
-const pageFn = new Function("args", PAGE_FN_BODY) as () => Comment[];
+const pageFn = new Function("args", PAGE_FN_BODY) as (
+  args: DetectorArgs,
+) => Comment[];
 
 export async function enumerateComments(page: Page): Promise<Comment[]> {
-  return await page.evaluate(pageFn, {});
+  const args: DetectorArgs = {
+    cardSel: SELECTORS.card,
+    nestedSel: SELECTORS.nestedCard,
+    bodySel: SELECTORS.commentBody,
+    permalinkActivitySel: SELECTORS.permalinkActivity,
+    permalinkUpdateSel: SELECTORS.permalinkUpdate,
+  };
+  return await page.evaluate(pageFn, args);
 }
 
 export function locateCard(page: Page, c: Comment): Locator {

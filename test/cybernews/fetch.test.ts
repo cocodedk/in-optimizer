@@ -157,4 +157,68 @@ describe("parseTweet", () => {
     const t = parseTweet(JSON.stringify({ id_str: "999", text: "x", user: {} }));
     expect(t.url).toBe("https://x.com/i/status/999");
   });
+
+  it("trims trailing pic.x.com t.co URL using display_text_range", () => {
+    const raw = "Body of the tweet. https://t.co/abc";
+    const t = parseTweet(
+      JSON.stringify({
+        id_str: "1",
+        text: raw,
+        user: { screen_name: "u" },
+        display_text_range: [0, 18], // "Body of the tweet."
+        entities: {
+          urls: [],
+          media: [{ url: "https://t.co/abc", indices: [19, 35] }],
+        },
+      }),
+    );
+    expect(t.text).toBe("Body of the tweet.");
+  });
+
+  it("expands in-body t.co URLs to their expanded_url", () => {
+    const t = parseTweet(
+      JSON.stringify({
+        id_str: "1",
+        text: "Read more: https://t.co/xyz now",
+        user: { screen_name: "u" },
+        display_text_range: [0, 31],
+        entities: {
+          urls: [
+            { url: "https://t.co/xyz", expanded_url: "https://example.com/article" },
+          ],
+        },
+      }),
+    );
+    expect(t.text).toBe("Read more: https://example.com/article now");
+  });
+
+  it("expands and trims together (real-world media-bearing tweet)", () => {
+    // "CVE-2026-1234 disclosed. Details: https://t.co/abc" is 0..50;
+    // " https://t.co/pic" is the auto-appended media URL beyond it.
+    const t = parseTweet(
+      JSON.stringify({
+        id_str: "1",
+        text: "CVE-2026-1234 disclosed. Details: https://t.co/abc https://t.co/pic",
+        user: { screen_name: "u" },
+        display_text_range: [0, 50],
+        entities: {
+          urls: [{ url: "https://t.co/abc", expanded_url: "https://nvd.nist.gov/cve" }],
+          media: [{ url: "https://t.co/pic", indices: [51, 67] }],
+        },
+      }),
+    );
+    expect(t.text).toBe("CVE-2026-1234 disclosed. Details: https://nvd.nist.gov/cve");
+  });
+
+  it("ignores malformed display_text_range", () => {
+    const t = parseTweet(
+      JSON.stringify({
+        id_str: "1",
+        text: "hello world",
+        user: { screen_name: "u" },
+        display_text_range: ["bad", "range"],
+      }),
+    );
+    expect(t.text).toBe("hello world");
+  });
 });

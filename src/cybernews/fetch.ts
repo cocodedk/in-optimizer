@@ -48,7 +48,7 @@ export function syndicationUrl(id: string, lang = "en"): string {
 export function parseTweet(json: string): Tweet {
   const obj = JSON.parse(json) as Record<string, unknown>;
   const id = (obj["id_str"] as string) ?? "";
-  const text = (obj["text"] as string) ?? "";
+  const text = extractText(obj);
   const createdAt = (obj["created_at"] as string) ?? "";
   const userObj = (obj["user"] as Record<string, unknown> | undefined) ?? {};
   const user: TweetUser = {
@@ -58,6 +58,41 @@ export function parseTweet(json: string): Tweet {
   const media = parseMedia(obj["mediaDetails"]);
   const url = user.screenName ? `https://x.com/${user.screenName}/status/${id}` : `https://x.com/i/status/${id}`;
   return { id, text, createdAt, user, media, url };
+}
+
+/**
+ * Body text with two corrections:
+ *  1. Trim to `display_text_range` so the auto-appended `pic.twitter.com`
+ *     t.co URL (which Twitter sticks at the end of any tweet with media)
+ *     is excluded.
+ *  2. Replace in-body `t.co` shortlinks with their `expanded_url` from
+ *     `entities.urls[]` so readers see the real domain.
+ */
+function extractText(obj: Record<string, unknown>): string {
+  const raw = (obj["text"] as string) ?? "";
+  let text = raw;
+  const range = obj["display_text_range"];
+  if (Array.isArray(range) && range.length >= 2) {
+    const start = Number(range[0]);
+    const end = Number(range[1]);
+    if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
+      text = raw.slice(start, end);
+    }
+  }
+  const entities = obj["entities"] as Record<string, unknown> | undefined;
+  const urls = entities?.["urls"];
+  if (Array.isArray(urls)) {
+    for (const u of urls) {
+      if (!u || typeof u !== "object") continue;
+      const item = u as Record<string, unknown>;
+      const tco = item["url"];
+      const expanded = item["expanded_url"];
+      if (typeof tco === "string" && typeof expanded === "string" && tco !== expanded) {
+        text = text.split(tco).join(expanded);
+      }
+    }
+  }
+  return text;
 }
 
 function parseMedia(value: unknown): TweetMedia[] {

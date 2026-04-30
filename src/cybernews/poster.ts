@@ -55,11 +55,14 @@ export async function typeBody(page: Page, body: string, opts: PosterOpts): Prom
   await sleep(jitter(220, 0.4, opts.rng));
   const minMs = opts.keyMinMs ?? 35;
   const maxMs = opts.keyMaxMs ?? 95;
+  // keyboard.type() emits keydown + keypress + input + keyup per char,
+  // which is what we want for humanization. insertText would emit only
+  // input, leaving the keystroke pattern empty.
   for (const ch of body) {
     if (ch === "\n") {
       await page.keyboard.press("Enter");
     } else {
-      await page.keyboard.insertText(ch);
+      await page.keyboard.type(ch);
     }
     const delay = minMs + Math.round(opts.rng() * (maxMs - minMs));
     await sleep(delay);
@@ -114,7 +117,9 @@ export async function submit(page: Page, rng: Rng): Promise<SubmitResult> {
   } catch {
     return { status: "failed", reason: "submit-button-missing" };
   }
-  await waitForEnabled(submit, SHORT_TIMEOUT);
+  if (!(await waitForEnabled(submit, SHORT_TIMEOUT))) {
+    return { status: "failed", reason: "submit-button-disabled" };
+  }
   try {
     await humanClick(page, submit, rng);
   } catch {
@@ -125,15 +130,16 @@ export async function submit(page: Page, rng: Rng): Promise<SubmitResult> {
   return { status: "posted", liUrl };
 }
 
-async function waitForEnabled(loc: Locator, timeoutMs: number): Promise<void> {
+async function waitForEnabled(loc: Locator, timeoutMs: number): Promise<boolean> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const disabled = await loc.evaluate(
       (el) => (el as HTMLButtonElement).disabled || el.getAttribute("aria-disabled") === "true",
     );
-    if (!disabled) return;
+    if (!disabled) return true;
     await sleep(200);
   }
+  return false;
 }
 
 async function captureUrl(page: Page): Promise<string | undefined> {

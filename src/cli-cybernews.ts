@@ -27,6 +27,14 @@ type Args = {
   seed: number;
 };
 
+const SEVERITIES: readonly Severity[] = ["info", "notable", "critical", "zero-day"];
+
+function parseSeverity(value: string): Severity {
+  if ((SEVERITIES as readonly string[]).includes(value)) return value as Severity;
+  console.error(`invalid --severity=${value}. expected one of: ${SEVERITIES.join(", ")}`);
+  process.exit(2);
+}
+
 function parse(argv: string[]): Args {
   const a: Args = {
     cmd: "help",
@@ -56,7 +64,7 @@ function parse(argv: string[]): Args {
     else if (v.startsWith("--media-out=")) a.mediaOut = v.slice(12);
     else if (v.startsWith("--media-dir=")) a.mediaDir = v.slice(12);
     else if (v.startsWith("--draft=")) a.draftPath = v.slice(8);
-    else if (v.startsWith("--severity=")) a.severity = v.slice(11) as Severity;
+    else if (v.startsWith("--severity=")) a.severity = parseSeverity(v.slice(11));
     else if (v.startsWith("--seed=")) a.seed = Number(v.slice(7));
     else if (v.startsWith("--limit=")) a.limit = Number(v.slice(8));
   }
@@ -78,7 +86,7 @@ Usage:
         [--media-dir=DIR]              attach images/videos from DIR (sorted by name)
         [--severity=info|notable|critical|zero-day]
         [--profile-dir=.profile]
-        [--auto-post]                  skip the "press ENTER to submit" gate
+        [--auto-post]                  skip the confirmation gate (default: type "go" to submit)
         [--headless]                   hide the browser (NOT recommended)
         [--dry-run]                    print body + media list, don't open browser
         [--seed=N]                     RNG seed for reproducibility

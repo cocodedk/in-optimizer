@@ -47,7 +47,7 @@ Default behavior:
 - Mouse motion via `src/humanCursor.ts` (bezier path, jitter).
 - Per-char keydown delay 35-95ms (jittered) for the body.
 - Image/video attached from `state/cybernews/media/<ID>/` (sorted by filename).
-- Pauses at the `press ENTER to submit` gate — the destructive click only happens after you confirm. Type `no` to abort and record `skipped`.
+- Pauses at the confirmation gate. Type `go` (or `y` / `yes` / `ja`) to submit. Anything else, including pressing ENTER alone or closing the terminal, aborts and records `skipped`.
 - Captures the resulting LinkedIn post URL from the success toast (or first-post permalink) into `posted.json`.
 - `--auto-post` skips the gate (use only after a clean dry-run on the same draft).
 - `--dry-run` prints the body + media list and records `dryrun` outcome without opening the browser.

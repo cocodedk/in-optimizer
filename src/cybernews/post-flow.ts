@@ -38,8 +38,9 @@ export async function runPostFlow(opts: PostFlowOpts): Promise<number> {
   }
   const mediaPaths = collectMedia(opts.mediaDir);
   const state = new CyberNewsState(opts.stateDir);
-  if (state.isTerminal(opts.id) && state.recordFor(opts.id)?.outcome === "posted") {
-    console.error(`tweet ${opts.id} already posted`);
+  if (state.isTerminal(opts.id)) {
+    const prior = state.recordFor(opts.id)!.outcome;
+    console.error(`tweet ${opts.id} already ${prior}`);
     return 0;
   }
 
@@ -59,11 +60,15 @@ export async function runPostFlow(opts: PostFlowOpts): Promise<number> {
     await parkCursor(composed.page, rng);
 
     if (!opts.autoPost) {
-      console.log("\ncomposer is ready. inspect the modal, then press ENTER to submit, or type 'no' to abort:");
-      const ans = await prompt();
-      if (ans.toLowerCase().startsWith("n")) {
-        state.markPosted(opts.id, { outcome: "skipped", reason: "user-abort", severity: opts.severity });
-        state.appendLog({ id: opts.id, action: "skipped", reason: "user-abort", severity: opts.severity });
+      console.log(
+        "\ncomposer is ready. inspect the modal, then type 'go' (or 'y') to submit. anything else aborts:",
+      );
+      const ans = (await prompt()).toLowerCase();
+      const proceed = ans === "go" || ans === "y" || ans === "yes" || ans === "ja";
+      if (!proceed) {
+        const reason = ans === "" ? "user-abort-empty" : "user-abort";
+        state.markPosted(opts.id, { outcome: "skipped", reason, severity: opts.severity });
+        state.appendLog({ id: opts.id, action: "skipped", reason, severity: opts.severity });
         state.flush();
         console.log("aborted. recorded as skipped.");
         return 0;

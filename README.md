@@ -1,14 +1,19 @@
 # in-optimizer
 
-Delete your own LinkedIn comments, slowly. Local tool, your browser, your account.
-No API tokens, no third-party server, no password automation.
+Local LinkedIn surface tools. Your browser, your account. No API tokens, no
+third-party server, no password automation.
 
-Pacing target: **~1 delete every 5–8 s** with jittered timing and long breaks.
-Designed to keep one residential IP and one logged-in profile believable to
-LinkedIn's automation defenses.
+Two surfaces, both deliberately slow and human-paced:
+
+- **Comment cleaner** — delete your own old LinkedIn comments at ~1 every 5-8 s,
+  with hourly and daily caps. Drives the activity-comments page.
+- **Cyber-news poster (Danish)** — fetch cybersecurity tweets from a public X
+  handle (default `@IntCyberDigest`), classify severity, translate to simple
+  Danish, run `/humanizer-da` twice, post to your LinkedIn feed with images.
+  One post per invocation; you control the cadence.
 
 Sister project: [`x-cleaner`](../x-cleaner) (same approach for X/Twitter
-replies). The architecture and conventions here mirror it deliberately.
+replies). The architecture and conventions mirror it deliberately.
 
 ## Website
 
@@ -17,10 +22,12 @@ replies). The architecture and conventions here mirror it deliberately.
 
 ## Status
 
-Selectors verified live on 2026-04-28 (see `docs/selectors.md`). v1 deletes
-comments listed on `https://www.linkedin.com/in/me/recent-activity/comments/`,
-including a `--collect=<path>` mode that dumps the queue to JSON for review
-and a `--only-ids=<path>` mode that acts on an approved subset.
+- Comment-cleaner selectors verified live 2026-04-28 (`docs/selectors.md`).
+  Includes `--collect=<path>` to dump the queue to JSON and `--only-ids=<path>`
+  to act on an approved subset.
+- Cyber-news poster verified live 2026-04-30 (`docs/cybernews-selectors-li.md`).
+  First post landed on the author's feed; selectors anchored to ARIA / shadow-
+  DOM-piercing locators.
 
 ## What's in the box
 
@@ -38,9 +45,19 @@ src/
   humanCursor.ts      Bezier-smoothed mouse moves, jittered click points
   browser.ts          persistent-profile Chromium launcher
   runner.ts           glues scheduler + detector + delete + state + diagnose
-  cli.ts              login | probe | run subcommands
+  cli.ts              cleaner CLI: login | probe | run
+  cybernews/          cyber-news poster slice (≤200 LOC each)
+    state.ts          posted.json + log.jsonl, BigInt high-water mark
+    fetch.ts          X syndication API parser + media downloader
+    discover.ts       timeline-profile parser + newSince filter
+    severity.ts       info | notable | critical | zero-day classifier
+    hashtags.ts       #cybersikkerhed + signal/keyword tags
+    selectors-li.ts   LinkedIn composer selectors (en + da)
+    poster.ts         Playwright compose + attach + submit
+    post-flow.ts      browser lifecycle + ENTER-to-submit gate
+  cli-cybernews.ts    cyber-news CLI: discover | fetch | post | status
 test/                 unit + Playwright fixture-HTML integration tests
-docs/                 selectors.md (LinkedIn DOM reference)
+docs/                 selectors.md, cybernews-selectors-li.md, cybernews-glossary.md
 ```
 
 Every source file is under 200 LOC.
@@ -141,6 +158,34 @@ LinkedIn is stricter than X/Twitter, so defaults are noticeably more
 conservative than `x-cleaner`. Tune via the `Scheduler` config in
 `src/cli.ts` if you need to.
 
+## Cyber-news poster (Danish)
+
+Drive the cyber-news pipeline from the same persistent profile (one login covers
+both surfaces).
+
+```sh
+# discover IDs newer than the high-water mark
+npm run cyber-news -- discover --handle=IntCyberDigest
+
+# fetch one tweet (text + classification + Danish hashtags + media)
+npm run cyber-news -- fetch --id=<TWEETID> \
+  --media-out=state/cybernews/media/<TWEETID>
+
+# post one (after writing the Danish draft to state/cybernews/drafts/<TWEETID>.md)
+npm run cyber-news -- post --id=<TWEETID> \
+  --draft=state/cybernews/drafts/<TWEETID>.md \
+  --media-dir=state/cybernews/media/<TWEETID> \
+  --severity=zero-day
+```
+
+Defaults to a confirmation gate before clicking Post (type `go` to submit,
+anything else aborts and records `skipped`). Pass `--auto-post` to skip the
+gate.
+
+The full loop, including translation and `/humanizer-da` passes, lives in the
+[`/in-optimize:cyber-news`](plugins/in-optimize/skills/cyber-news/SKILL.md)
+plugin skill. Pacing rule: 1 post / 2 hours, daily cap 8.
+
 ## Caveats
 
 - Browser automation of your own account for content deletion sits in a grey
@@ -157,7 +202,9 @@ conservative than `x-cleaner`. Tune via the `Scheduler` config in
 
 ## Docs
 
-- [`docs/selectors.md`](docs/selectors.md) — LinkedIn DOM reference (live-verified 2026-04-28)
+- [`docs/selectors.md`](docs/selectors.md) — comment-cleaner DOM reference (live-verified 2026-04-28)
+- [`docs/cybernews-selectors-li.md`](docs/cybernews-selectors-li.md) — composer DOM reference (live-verified 2026-04-30)
+- [`docs/cybernews-glossary.md`](docs/cybernews-glossary.md) — Danish cyber vocab + tone notes
 - [`CLAUDE.md`](CLAUDE.md) — conventions for Claude when working in this repo
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — local setup, hooks, branch naming, PR checklist
 - [`SECURITY.md`](SECURITY.md) — vulnerability reporting

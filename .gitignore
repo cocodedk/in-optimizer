@@ -7,3 +7,4 @@ state/
 *.log
 .env
 .env.local
+opencode-review-*

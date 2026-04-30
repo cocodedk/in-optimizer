@@ -13,16 +13,27 @@ export const FEED_URL = "https://www.linkedin.com/feed/";
 
 export const LI_SELECTORS = {
   /**
-   * Trigger that opens the post composer at the top of /feed/. LinkedIn
-   * renders this as a button with the "Start a post" placeholder text.
-   * The class names rotate, so we lead with text-based locators.
+   * Trigger that opens the post composer at the top of /feed/.
+   *
+   * 2026-04-30 update: LinkedIn shipped a redesign that:
+   *   1. moved the trigger from a <button> to a <div role="button"> (or
+   *      sometimes a bare <div>),
+   *   2. dropped the legacy `share-box-*` class anchors,
+   *   3. switched to opaque hashed CSS classes,
+   *   4. removed the `data-test-id` attribute.
+   * The only stable anchor we found is the aria-label. Match without the
+   * tag prefix and prefer exact-match locales before case-insensitive
+   * partial fallbacks.
    */
   startPostTrigger:
+    '[data-view-name="share-sharebox-focus"], ' +
+    '[role="button"]:has([aria-label="Start a post"]), ' +
+    '[role="button"]:has([aria-label="Create a post"]), ' +
+    '[role="button"]:has([aria-label="Opret et opslag"]), ' +
+    '[role="button"]:has([aria-label*="Start a post" i]), ' +
+    '[role="button"]:has([aria-label*="Opret et opslag" i]), ' +
     'button.share-box-feed-entry__trigger, ' +
     'button.share-box__open, ' +
-    'button[aria-label*="Start a post" i], ' +
-    'button[aria-label*="Create a post" i], ' +
-    'button[aria-label*="Opret et opslag" i], ' +
     '[data-test-id="share-box-feed-entry__trigger"]',
 
   /** The composer modal that opens after clicking the trigger. */
@@ -33,25 +44,41 @@ export const LI_SELECTORS = {
     '.share-creation-state__container',
 
   /**
-   * The contenteditable surface for the post body. LinkedIn's composer
-   * runs Quill, so we match its `.ql-editor` first and the generic
-   * contenteditable role second.
+   * The contenteditable surface for the post body.
+   *
+   * 2026-04-30 update: the composer is now rendered inside an interop
+   * shadow root (host: `<div id="interop-outlet" class="theme--light">`).
+   * Playwright's CSS engine still pierces this when given the `css=`
+   * prefix, but role/aria-label scoping is the most reliable anchor.
+   * The combination `[contenteditable="true"][role="textbox"]` excludes
+   * the page's `<input>` search field (which has role=textbox but is
+   * not contenteditable).
    */
   bodyEditor:
-    '.ql-editor[contenteditable="true"], ' +
-    '[role="dialog"] [role="textbox"][contenteditable="true"], ' +
-    '[role="dialog"] [contenteditable="true"][data-placeholder]',
-
-  /** The "Add a photo" / media-attach button inside the composer. */
-  addMediaButton:
-    'button[aria-label*="Add a photo" i], ' +
-    'button[aria-label*="Add media" i], ' +
-    'button[aria-label*="Tilføj et foto" i], ' +
-    'button.share-promoted-detour-button[aria-label*="photo" i]',
+    '[contenteditable="true"][role="textbox"][aria-label*="ext editor" i], ' +
+    '[contenteditable="true"][role="textbox"][placeholder*="hare your" i], ' +
+    '[contenteditable="true"][role="textbox"][placeholder*="el dine tanker" i], ' +
+    '[contenteditable="true"][role="textbox"], ' +
+    '.ql-editor[contenteditable="true"]',
 
   /**
-   * Hidden file input the media button reveals. We `setInputFiles` directly
-   * rather than going through the OS picker.
+   * The media-attach button inside the composer.
+   *
+   * 2026-04-30 update: redesign collapsed Photo / Video / Document into a
+   * single "Add media" trigger. Aria-label matters; class is opaque.
+   */
+  addMediaButton:
+    'button[aria-label="Add media"], ' +
+    'button[aria-label="Tilføj medier"], ' +
+    'button[aria-label*="Add media" i], ' +
+    'button[aria-label*="Add a photo" i], ' +
+    'button[aria-label*="Tilføj" i]',
+
+  /**
+   * Hidden file input the media button reveals. With the new composer,
+   * clicking Add media usually opens a native file chooser. We prefer
+   * `page.waitForEvent('filechooser')` over targeting this input
+   * directly, but keep the selector as a fallback.
    */
   fileInput:
     'input[type="file"][accept*="image"], ' +

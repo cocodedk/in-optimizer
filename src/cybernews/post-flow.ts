@@ -56,7 +56,18 @@ export async function runPostFlow(opts: PostFlowOpts): Promise<number> {
       console.error("not logged in. Run `npm run login` first.");
       return 3;
     }
-    const composed = await compose(ctx, body, mediaPaths, { rng });
+    let composed;
+    try {
+      composed = await compose(ctx, body, mediaPaths, { rng });
+    } catch (e) {
+      const page2 = ctx.pages()[0];
+      if (page2) {
+        const path = `state/cybernews/diagnostics/${Date.now()}-compose-fail.png`;
+        await page2.screenshot({ path, fullPage: false }).catch(() => {});
+        console.error(`compose failed: ${(e as Error).message}\n  diagnostic: ${path}`);
+      }
+      throw e;
+    }
     await parkCursor(composed.page, rng);
 
     if (!opts.autoPost) {

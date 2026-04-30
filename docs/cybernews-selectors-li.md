@@ -2,7 +2,19 @@
 
 Source-of-truth for `src/cybernews/selectors-li.ts`. When a selector breaks, update both files in the same change and bump the "last verified" date.
 
-**Last verified live: 2026-04-30** (smoke test only — composer opened, body typed, media attached. Submit not exercised.)
+**Last verified live: 2026-04-30** (full destructive flow — opened composer, attached 2 photos, typed Danish body, clicked Post. Tweet `2049618125709263240` posted successfully.)
+
+## Lessons from the first live run
+
+Several things that broke or surprised:
+
+- **Trigger is now a `<div role="button" tabindex="0">`**, not a `<button>`. Aria-label `"Start a post"` lives on an *inner* div; the click target is the outer wrapper. Use `[role="button"]:has([aria-label="Start a post"])`.
+- **Composer is rendered inside an open Shadow DOM** (host: `<div id="interop-outlet" class="theme--light">`). Playwright's CSS engine pierces this with `css=` prefix or default locator — but raw `document.querySelectorAll` in `page.evaluate` does not. Stick to Playwright locators, not page-side DOM queries.
+- **`button[aria-label="Add media"]` is the photo trigger** in the new composer. Old `share-promoted-detour-button[aria-label*="photo" i]` is a fallback.
+- **The Add media button is removed from the DOM once the editor has substantial content** — LinkedIn collapses the secondary toolbar to make room for "Rewrite with AI" and the Post button. The poster therefore attaches media *before* typing the body.
+- **`Escape` after typing `#` closes the composer modal**, not just the hashtag autocomplete. We removed that. Hashtag suggestions don't auto-commit; just type past them.
+- **`button[aria-label="Open Emoji Keyboard"]` and `Schedule post`** sit alongside Add media in the toolbar — useful future hooks.
+- **`button.share-actions__primary-action`** still works for the Post submit (legacy class survived the redesign, even though most other classes are now opaque hashes).
 
 ## Why selectors are split per surface
 

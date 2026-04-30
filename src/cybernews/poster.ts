@@ -39,12 +39,17 @@ export async function openComposer(
 ): Promise<Page> {
   const page = ctx.pages()[0] ?? (await ctx.newPage());
   await page.goto(FEED_URL, { waitUntil: "domcontentloaded", timeout: 30_000 });
-  await page.waitForTimeout(2000);
+  // The trigger area takes ~5s to settle on first paint; settle longer
+  // than feels strictly necessary so React doesn't re-render the trigger
+  // out from under our click.
+  await page.waitForTimeout(5000);
   const trigger = page.locator(LI_SELECTORS.startPostTrigger).first();
   await trigger.waitFor({ state: "visible", timeout: SHORT_TIMEOUT });
   await humanClick(page, trigger, rng);
-  const dialog = page.locator(LI_SELECTORS.composerDialog).first();
-  await dialog.waitFor({ state: "visible", timeout: SHORT_TIMEOUT });
+  // Composer modal opens inside a shadow root and animates in over a
+  // few seconds. Wait long enough that the editor is actually mounted
+  // before the typeBody locator tries to find it.
+  await page.waitForTimeout(5000);
   return page;
 }
 
@@ -58,6 +63,10 @@ export async function typeBody(page: Page, body: string, opts: PosterOpts): Prom
   // keyboard.type() emits keydown + keypress + input + keyup per char,
   // which is what we want for humanization. insertText would emit only
   // input, leaving the keystroke pattern empty.
+  //
+  // NOTE: don't press Escape after `#` to dismiss hashtag autocomplete —
+  // Escape also closes the composer modal. Typing past the suggestion is
+  // harmless; the suggestion isn't committed unless Tab/Enter selects it.
   for (const ch of body) {
     if (ch === "\n") {
       await page.keyboard.press("Enter");
@@ -66,10 +75,6 @@ export async function typeBody(page: Page, body: string, opts: PosterOpts): Prom
     }
     const delay = minMs + Math.round(opts.rng() * (maxMs - minMs));
     await sleep(delay);
-    if (ch === "#") {
-      await sleep(jitter(120, 0.4, opts.rng));
-      await page.keyboard.press("Escape").catch(() => {});
-    }
   }
   await sleep(jitter(500, 0.4, opts.rng));
 }
@@ -81,16 +86,31 @@ export async function attachMedia(
 ): Promise<void> {
   if (paths.length === 0) return;
   const addBtn = page.locator(LI_SELECTORS.addMediaButton).first();
-  if ((await addBtn.count()) > 0) {
-    await humanClick(page, addBtn, rng).catch(() => {});
-    await sleep(jitter(400, 0.3, rng));
+  await addBtn.waitFor({ state: "visible", timeout: SHORT_TIMEOUT });
+
+  // The redesigned composer dispatches a native file picker when Add media
+  // is clicked. Race the click against the filechooser event; whichever
+  // wins, we set files. If no filechooser fires, fall back to setInputFiles
+  // on the hidden <input type="file">.
+  let chooserSet = false;
+  const filechooser = page
+    .waitForEvent("filechooser", { timeout: 6000 })
+    .then(async (fc) => {
+      await fc.setFiles(paths);
+      chooserSet = true;
+    })
+    .catch(() => undefined);
+  await humanClick(page, addBtn, rng);
+  await filechooser;
+  if (!chooserSet) {
+    const input = page.locator(LI_SELECTORS.fileInput).first();
+    await input.waitFor({ state: "attached", timeout: SHORT_TIMEOUT });
+    await input.setInputFiles(paths);
   }
-  const input = page.locator(LI_SELECTORS.fileInput).first();
-  await input.waitFor({ state: "attached", timeout: SHORT_TIMEOUT });
-  await input.setInputFiles(paths);
+
   const thumb = page.locator(LI_SELECTORS.mediaThumbnails).first();
-  await thumb.waitFor({ state: "visible", timeout: MEDIA_TIMEOUT });
-  await sleep(jitter(800, 0.3, rng));
+  await thumb.waitFor({ state: "visible", timeout: MEDIA_TIMEOUT }).catch(() => {});
+  await sleep(jitter(1500, 0.3, rng));
   const done = page.locator(LI_SELECTORS.mediaDoneButton).first();
   if ((await done.count()) > 0) {
     await humanClick(page, done, rng).catch(() => {});
@@ -105,8 +125,11 @@ export async function compose(
   opts: PosterOpts,
 ): Promise<ComposeResult> {
   const page = await openComposer(ctx, opts.rng);
-  await typeBody(page, body, opts);
+  // Attach media BEFORE typing the body — LinkedIn collapses the secondary
+  // toolbar (which holds Add media) once the editor has substantial
+  // content, so the button disappears mid-flow if we type first.
   await attachMedia(page, mediaPaths, opts.rng);
+  await typeBody(page, body, opts);
   return { status: "composed", page };
 }
 

@@ -1,27 +1,12 @@
 ---
-description: Use when the user wants to translate a fresh @IntCyberDigest tweet (or any cybersecurity tweet) into a Danish LinkedIn post. Drives the discover → fetch → translate → /humanizer-da × 2 → confirm → post loop. Treats every cycle as one tweet at a time. Posting is gated behind explicit user confirmation. Self-arms a 2-hour cron on first invocation so the loop continues without a separate /loop call.
+description: Use when the user wants to translate a fresh @IntCyberDigest tweet (or any cybersecurity tweet) into a Danish LinkedIn post. Drives the discover → fetch → translate → /humanizer-da × 2 → confirm → post loop. Treats every cycle as one tweet at a time. Posting is gated behind explicit user confirmation.
 ---
 
 # Cyber-news → LinkedIn (Danish)
 
 Goal: turn cybersecurity news from `@IntCyberDigest` (or another handle) into a humanized Danish LinkedIn post, severity-shaped, with the original images, posted slowly through Playwright.
 
-## Step 0 — self-arm the 2-hour cron (every invocation)
-
-Before doing anything else, ensure a recurring cron is scheduled so the loop continues without the user calling `/loop` separately.
-
-1. Call `CronList`.
-2. If any existing job's prompt starts with `/in-optimize:cyber-news`, **skip** — already armed.
-3. Otherwise call `CronCreate` with:
-   - `cron="0 */2 * * *"` (every 2 hours, on the hour, UTC by the local cron runner)
-   - `prompt="/in-optimize:cyber-news"`
-   - `recurring=true`
-   - `durable=true` (persists to `.claude/scheduled_tasks.json` so it survives Claude restarts on the same machine)
-4. Confirm to the user in one line: cron armed / cron already armed.
-
-The cron only fires while a Claude REPL is running on this project. If the user closes Claude entirely, the loop stops. That's intentional — destructive posting needs a human at the confirm gate.
-
-## Step 0.5 — daily-cap check (every invocation, before fetching)
+## Step 0 — daily-cap check (every invocation, before fetching)
 
 Run `npm run cyber-news -- status --json` and read `postedToday` and `dailyCap`. If `postedToday >= dailyCap` (default 3), **stop the cycle**. Print one line: `daily cap reached (N/cap) — skipping this tick`. Do nothing else; the cron will fire again later, and tomorrow the count resets.
 
@@ -62,6 +47,18 @@ The classifier in `src/cybernews/severity.ts` returns one of `info | notable | c
 
 Across all four: no em dashes, no " - " as a pause marker (humanizer-da hard rule).
 
+## Image style
+
+Every post needs an image. **If the source tweet has its own images, use those** (already downloaded to `state/cybernews/media/<ID>/` by `fetch`). Don't generate a new one; original media is more authentic and respects attribution.
+
+**Only when the post has no source images** (e.g. a meta-post about a GitHub repo with no tweet origin), use the house style: **monochrome neon-green line-art on pure black background**, simple flat composition, usually a developer figure (hoodie, round glasses) interacting with topic-specific glyphs. No color, no text, no real brand logos. 16:9.
+
+Boilerplate prompt template to hand to the user (Sora / DALL-E / Midjourney etc.):
+
+> "Pure black background, monochrome neon-green line-art only, minimal flat composition. [TOPIC SCENE — e.g. a developer holding two glowing cables joining at the center, each ending in a topic-specific glyph]. 16:9. No text, no letters, no real brand logos."
+
+The user generates externally and drops the PNG in `state/cybernews/media/<id>/`. ChatGPT-generated images carry C2PA Content Credentials metadata which LinkedIn renders as a "cr" badge on the post — the user is OK with this.
+
 ## Posting (Playwright)
 
 Wired. Lives in `src/cybernews/poster.ts` + `src/cybernews/selectors-li.ts` + `src/cybernews/post-flow.ts`. Drives the same `.profile/` user-data dir as the comment cleaner (one manual login covers both surfaces).
@@ -85,9 +82,9 @@ Default behavior:
 
 Pacing rules:
 - **Daily cap: 3 posts per local day** (enforced by both the skill at Step 0.5 and the CLI at runtime).
-- **Inter-post pacing: ≥ 2 hours apart.** Self-armed by Step 0's cron. Closer than that and LinkedIn's burst-detection notices.
+- **Inter-post pacing: ≥ 2 hours apart.** Closer than that and LinkedIn's burst-detection notices.
 
-The 2-hour cron and the daily cap together mean at most 12 ticks per day, of which up to 3 land posts. The other 9 ticks become low-cost no-ops — they hit Step 0.5, see the cap is full or no novel candidates exist, and exit.
+The daily cap means at most 3 posts per day. Use `/loop` manually if you want recurring invocations.
 
 ## State
 
@@ -129,6 +126,6 @@ All files ≤ 200 LOC.
 - **"check for new"** → run discover, print count + IDs.
 - **"do the next one"** → full cycle on the oldest unprocessed ID, stop at the confirm gate.
 - **"skip this"** → mark `skipped` with the reason, move to next.
-- **"loop hourly" / "every 2 hours"** → already self-armed by Step 0. To change cadence, edit the cron in `.claude/scheduled_tasks.json` or run `CronList` + `CronDelete` then `CronCreate` with the new expression.
-- **"stop the loop"** → `CronList` to find the job ID, then `CronDelete` it. The skill itself doesn't auto-stop.
+- **"loop every N hours"** → use `/loop Nh /in-optimize:cyber-news` manually.
+- **"stop the loop"** → end the `/loop` session.
 - **"selectors broke"** → after poster.ts is wired, triage the diagnostic bundle in `state/cybernews/diagnostics/`.

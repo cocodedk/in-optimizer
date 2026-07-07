@@ -17,7 +17,7 @@
     "cyber-news": "tsx src/cli-cybernews.ts"
   },
   "devDependencies": {
-    "@types/node": "^26.0.1",
+    "@types/node": "^26.1.0",
     "playwright": "^1.61.1",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3",

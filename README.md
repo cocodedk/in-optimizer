@@ -17,8 +17,8 @@ replies). The architecture and conventions mirror it deliberately.
 
 ## Website
 
-- [English](https://cocodedk.github.io/in-optimizer/)
-- [فارسی (Persian)](https://cocodedk.github.io/in-optimizer/fa/)
+- [English](https://in-optimizer.cocode.dk/)
+- [فارسی (Persian)](https://in-optimizer.cocode.dk/fa/)
 
 ## Status
 

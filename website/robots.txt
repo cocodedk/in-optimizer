@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://cocodedk.github.io/in-optimizer/sitemap.xml
+Sitemap: https://in-optimizer.cocode.dk/sitemap.xml

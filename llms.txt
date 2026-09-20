@@ -21,4 +21,4 @@ Selectors live in `src/selectors.ts` with a paired `docs/selectors.md` that docu
 ## Optional
 
 - [Plugin (`.claude-plugin/`)](https://github.com/cocodedk/in-optimizer/tree/main/.claude-plugin): local Claude Code plugin shipping per-surface skills (`comment`, `post`, `personal-profile`, `company-profile`)
-- [GitHub Pages](https://cocodedk.github.io/in-optimizer/): bilingual project site (English / فارسی)
+- [GitHub Pages](https://in-optimizer.cocode.dk/): bilingual project site (English / فارسی)

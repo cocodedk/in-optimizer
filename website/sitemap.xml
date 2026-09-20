@@ -2,17 +2,17 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://cocodedk.github.io/in-optimizer/</loc>
+    <loc>https://in-optimizer.cocode.dk/</loc>
     <lastmod>2026-04-28</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://cocodedk.github.io/in-optimizer/" />
-    <xhtml:link rel="alternate" hreflang="fa" href="https://cocodedk.github.io/in-optimizer/fa/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://cocodedk.github.io/in-optimizer/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://in-optimizer.cocode.dk/" />
+    <xhtml:link rel="alternate" hreflang="fa" href="https://in-optimizer.cocode.dk/fa/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://in-optimizer.cocode.dk/" />
   </url>
   <url>
-    <loc>https://cocodedk.github.io/in-optimizer/fa/</loc>
+    <loc>https://in-optimizer.cocode.dk/fa/</loc>
     <lastmod>2026-04-28</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://cocodedk.github.io/in-optimizer/" />
-    <xhtml:link rel="alternate" hreflang="fa" href="https://cocodedk.github.io/in-optimizer/fa/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://cocodedk.github.io/in-optimizer/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://in-optimizer.cocode.dk/" />
+    <xhtml:link rel="alternate" hreflang="fa" href="https://in-optimizer.cocode.dk/fa/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://in-optimizer.cocode.dk/" />
   </url>
 </urlset>

@@ -43,6 +43,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" />
 <link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="https://brand.cocode.dk/v1.css" />
+<script type="module" src="https://brand.cocode.dk/v1.js"></script>
 
 <script type="application/ld+json">
 {
@@ -68,12 +70,13 @@
 </head>
 
 <body>
-<div class="frame">
+<cocode-head project="in-optimizer" accent="#C9A227" on-accent="#0F1116" dark>
+  <a href="https://cocode.dk">cocode.dk</a>
+  <span class="on">EN</span>
+  <a href="fa/" hreflang="fa">FA</a>
+</cocode-head>
 
-<nav class="nav">
-  <a class="wordmark" href="/">in-optimizer</a>
-  <a class="lang-switch" href="fa/" hreflang="fa" lang="fa">فارسی</a>
-</nav>
+<div class="frame">
 
 <main>
 
@@ -222,9 +225,13 @@ npm run cyber-news -- post --id=&lt;TWEETID&gt; \
 </main>
 
 <footer>
-  <p>Apache-2.0 &nbsp;|&nbsp; © 2026 <a href="https://cocode.dk" target="_blank" rel="noreferrer">Cocode</a> &nbsp;|&nbsp; Created by <a href="https://linkedin.com/in/babakbandpey" target="_blank" rel="noreferrer">Babak Bandpey</a></p>
+  <p>Apache-2.0</p>
 </footer>
 
 </div>
+
+<cocode-foot repo="cocodedk/in-optimizer" dark>
+  <a href="https://cocode.dk">cocode.dk</a>
+</cocode-foot>
 </body>
 </html>

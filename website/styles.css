@@ -61,45 +61,14 @@ body {
   margin: 0 auto;
   padding: 0 var(--gutter);
 }
+/* The cocode.dk frame (brand.cocode.dk) lines up with this column; --gutter already
+   steps up at 640px, so the frame follows it without a media query of its own. */
+cocode-head, cocode-foot { --cocode-max: var(--max-content); --cocode-gutter: var(--gutter); }
 
 main { padding: 64px 0 96px; }
 
 @media (min-width: 1024px) {
   main { padding: 112px 0 144px; }
-}
-
-/* nav (sparse) */
-.nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24px 0;
-  font-family: var(--mono);
-  font-size: var(--fs-mono);
-  color: var(--paper-dim);
-  letter-spacing: 0.04em;
-}
-.nav a { color: var(--paper-dim); text-decoration: none; }
-.nav a:hover { color: var(--brass); }
-.lang-switch { border-bottom: 1px solid var(--hairline); padding-bottom: 2px; }
-
-.wordmark {
-  font-family: var(--display);
-  font-style: italic;
-  font-weight: 400;
-  font-size: 24px;
-  color: var(--paper);
-  text-decoration: none;
-  letter-spacing: -0.01em;
-}
-.wordmark::before {
-  content: '';
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  margin-right: 8px;
-  background: url('favicon.svg') center/contain no-repeat;
-  vertical-align: -2px;
 }
 
 /* hero */
@@ -322,8 +291,6 @@ footer {
   letter-spacing: 0.04em;
   text-align: center;
 }
-footer a { color: var(--paper-dim); }
-footer a:hover { color: var(--brass); }
 
 /* entrance: one staggered reveal on first paint */
 .hero h1, .hero p.lead, .instrument {
@@ -349,5 +316,4 @@ footer a:hover { color: var(--brass); }
   --sans:    'Vazirmatn', system-ui, sans-serif;
 }
 [dir="rtl"] .hero h1 em { font-style: normal; }
-[dir="rtl"] .wordmark::before { margin-right: 0; margin-left: 8px; }
 [dir="rtl"] .readout dd::after { content: '\A'; white-space: pre; }

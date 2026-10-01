@@ -75,10 +75,15 @@ button[aria-label*="Post" i][data-test-id*="share" i],
 
 The structural class is the most reliable. Text-based fallbacks survive class renames but fail on locale changes.
 
-### `postedToast` + `feedFirstPostPermalink`
-After submit, LinkedIn shows a toast with a "View post" link. We capture the post URL from there. As a fallback, we read the permalink from the new top-of-feed post.
+### `postedToast` + `activityPermalink`  (URL capture)
+The URN format is `urn:li:activity:<id>`; the canonical permalink is `https://www.linkedin.com/feed/update/urn:li:activity:<id>/`. `post-result.ts::captureUrl` resolves it in two ordered strategies:
 
-The URN format is `urn:li:activity:<id>`; the canonical permalink is `https://www.linkedin.com/feed/update/urn:li:activity:<id>/`.
+1. **`postedToast`** (fast path) — the ephemeral "View post" toast on `/feed/`. Timing-sensitive and sometimes behind the interop shadow root, so it is best-effort only.
+2. **`activityPermalink`** (deterministic) — navigate to `RECENT_ACTIVITY_URL` (`/in/me/recent-activity/all/`) and read the newest post's permalink anchor. This is the reliable surface (same one the comment-cleaner uses).
+
+**2026-06-03 — what changed and why.** Capture had been returning `null` on every successful post for weeks. Live triage on 2026-06-03 found the cause: the old fallback (`feedFirstPostPermalink`, `main [data-urn^="urn:li:activity:"] a[href*="/feed/update/urn:li:activity:"]`) never matched because (a) the new post is not reliably at the top of the algorithmic `/feed/`, and (b) on `recent-activity` the permalink href is actually `/analytics/post-summary/urn:li:activity:<id>/`, **not** `/feed/update/...`. Fix: match `urn:li:activity:` in *any* href (`activityPermalink: 'a[href*="urn:li:activity:"]'`) and normalize via `activityUrlFromHref()` (unit-tested in `test/cybernews/post-result.test.ts`). The toast selector was also loosened to any `urn:li:activity:` href. On total miss, `captureUrl` now dumps `page.html` + `screenshot.png` to `state/cybernews/diagnostics/<ts>-urlcap-fail/`.
+
+Gotcha observed during triage: reusing a restored browser tab (e.g. an open messaging thread) lets a client-side redirect hijack the first `goto`. `gotoRecentActivity()` retries once and confirms the landing URL contains `recent-activity`.
 
 ## Triage when a selector breaks
 

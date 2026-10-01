@@ -1,6 +1,7 @@
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { discover, newSince } from "./cybernews/discover.ts";
+import { discover, newSince, type DiscoveredTweet } from "./cybernews/discover.ts";
+import { DiscoverCache, isRateLimitError } from "./cybernews/discover-cache.ts";
 import { downloadMedia, fetchTweet } from "./cybernews/fetch.ts";
 import { CyberNewsState } from "./cybernews/state.ts";
 import { classify } from "./cybernews/severity.ts";
@@ -11,13 +12,45 @@ import { type Args, HELP, parse } from "./cybernews/cli-args.ts";
 async function cmdDiscover(a: Args): Promise<number> {
   const state = new CyberNewsState(a.stateDir);
   const since = state.highWaterMark();
-  const all = await discover(a.handle);
+  const cache = new DiscoverCache(a.stateDir);
+
+  let all: DiscoveredTweet[];
+  let source: "fresh-cache" | "live" | "stale-cache-fallback";
+  let cacheAge: number | null = null;
+
+  if (!a.noCache && cache.isFresh(a.handle, a.cacheTtl)) {
+    all = cache.get(a.handle)!.tweets;
+    source = "fresh-cache";
+    cacheAge = Math.round(cache.ageSeconds(a.handle));
+  } else {
+    try {
+      all = await discover(a.handle);
+      cache.set(a.handle, all);
+      cache.flush();
+      source = "live";
+    } catch (err) {
+      const stale = cache.get(a.handle);
+      if (isRateLimitError(err) && stale) {
+        all = stale.tweets;
+        source = "stale-cache-fallback";
+        cacheAge = Math.round(cache.ageSeconds(a.handle));
+      } else throw err;
+    }
+  }
+
   const fresh = newSince(all, since).slice(0, a.limit);
   if (a.json) {
-    process.stdout.write(JSON.stringify({ handle: a.handle, since, count: fresh.length, tweets: fresh }, null, 2) + "\n");
+    process.stdout.write(
+      JSON.stringify(
+        { handle: a.handle, since, count: fresh.length, source, cacheAgeSeconds: cacheAge, tweets: fresh },
+        null,
+        2,
+      ) + "\n",
+    );
   } else {
     console.log(`handle:    @${a.handle}`);
     console.log(`since:     ${since ?? "(none)"}`);
+    console.log(`source:    ${source}${cacheAge !== null ? ` (age ${cacheAge}s)` : ""}`);
     console.log(`fresh:     ${fresh.length}`);
     for (const t of fresh) console.log(`  ${t.id}${t.selfAuthored === false ? " (rt?)" : ""}`);
   }

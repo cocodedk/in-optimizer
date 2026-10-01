@@ -1,16 +1,23 @@
 ---
-description: Use when the user wants to translate a fresh @IntCyberDigest tweet (or any cybersecurity tweet) into a Danish LinkedIn post. Drives the discover → fetch → translate → /humanizer-da × 2 → confirm → post loop. Treats every cycle as one tweet at a time. Posting is gated behind explicit user confirmation.
+description: Use when the user wants to translate a fresh @IntCyberDigest tweet (or any cybersecurity tweet) into a Danish LinkedIn post. Drives the discover → fetch → verify → translate → /humanizer-da × 2 → confirm → post loop. Posts are short, educational and factual (never sensational) and cite credible real sources, never the source tweet. Treats every cycle as one tweet at a time. Posting is gated behind explicit user confirmation.
 ---
 
 # Cyber-news → LinkedIn (Danish)
 
-Goal: turn cybersecurity news from `@IntCyberDigest` (or another handle) into a humanized Danish LinkedIn post, severity-shaped, with the original images, posted slowly through Playwright.
+Goal: turn cybersecurity news from `@IntCyberDigest` (or another handle) into a short, humanized Danish LinkedIn post that is educational and factual, severity-shaped, posted slowly through Playwright. The tweet is only a lead; the finished post stands on verified facts and credible source links, never on the tweet itself.
+
+## Voice & sourcing (non-negotiable)
+
+- **Informative, never fearmongering or sensational.** Lead with facts and one practical takeaway. No scare hooks, no accusatory one-liners, no clickbait. A calm, educational register is the brand, even when the source tweet is dramatic.
+- **Short.** Favour the shortest version that still teaches one thing. See *Severity shapes* for length caps; when in doubt, cut.
+- **Facts, not speculation.** Before writing, investigate the claim: web-search for and read the actual primary source (official advisory, vendor security bulletin, CVE/NVD entry, a regulator such as the FTC, or reputable reporting). Write only what those sources support. If something can't be verified, leave it out. Never restate a tweet's spin as fact.
+- **Link to credible real sources, never to X/Twitter.** A tweet is a lead, not a citation. The post's `Kilde:` line(s) point to the primary or authoritative source you verified against, even when the lead came from x.com. Do not link the tweet and do not credit the X handle as the source.
 
 ## Step 0 — daily-cap check (every invocation, before fetching)
 
-Run `npm run cyber-news -- status --json` and read `postedToday` and `dailyCap`. If `postedToday >= dailyCap` (default 3), **stop the cycle**. Print one line: `daily cap reached (N/cap) — skipping this tick`. Do nothing else; the cron will fire again later, and tomorrow the count resets.
+Run `npm run cyber-news -- status --json` and read `postedToday` and `dailyCap`. If `postedToday >= dailyCap` (default 3), **stop the cycle**. Print one line: `daily cap reached (N/cap) — skipping this run`. Do nothing else; tomorrow the count resets.
 
-This avoids burning a discover/fetch quota on a cycle that can't post anyway. The CLI's `post` subcommand also enforces the cap at runtime (so a manual post or `--auto-post` cron tick can't bypass it without `--force`), but checking here saves the work.
+This avoids burning a discover/fetch quota on a cycle that can't post anyway. The CLI's `post` subcommand also enforces the cap at runtime (so a manual or `--auto-post` run can't bypass it without `--force`), but checking here saves the work.
 
 ## Cycle (one tweet)
 
@@ -28,30 +35,33 @@ This avoids burning a discover/fetch quota on a cycle that can't post anyway. Th
 
    If the tweet doesn't pass: don't write a draft; mark `skipped` with the reason in the log (`reason: "not-novel"`, `"audience-miss"`, `"no-teachable-angle"`, `"duplicate-angle"`, `"vendor-pr"`) via `state.markPosted(id, { outcome: "skipped", reason: ... })` and try the next candidate, OR end the cycle if no candidate qualifies.
 
-5. **Translate to simple Danish** — write a draft sized by severity (see *Severity shapes* below). Use `docs/cybernews-glossary.md` for term choices. Save as `state/cybernews/drafts/<ID>.md`.
-6. **Run `/humanizer-da` twice** — invoke the slash command on the draft file, twice in sequence. Each pass is independent; do not skip the second one.
-7. **Append hashtags** — at the bottom of the post body, append the hashtags from step 3 (already includes `#cybersikkerhed`).
-8. **Append source link** — bottom line: "Kilde: <tweet URL>".
-9. **Confirm** — print the final draft + media list to the user. Wait for explicit "ja" / "go" / "post". Until v0.2 there is no auto-post.
-10. **Post via Playwright** — drives logged-in Chromium, attaches images, paces with `humanCursor`.
-11. **Record** — call the state writer with `outcome: "posted"` and the LinkedIn URL.
+5. **Verify the claim** — before writing anything, confirm the facts on the open web. Web-search for and read the primary source (official advisory, vendor security bulletin, CVE/NVD, a regulator such as the FTC, or reputable reporting). Capture 1-2 credible links you will cite. Discard or narrow anything you cannot verify. Write only what the sources support; no speculation, no echoing the tweet's framing.
+6. **Translate to simple Danish** — write a short draft sized by severity (see *Severity shapes* below). Calm, educational, factual; never sensational. Use `docs/cybernews-glossary.md` for term choices. Save as `state/cybernews/drafts/<ID>.md`.
+7. **Run `/humanizer-da` twice** — invoke the slash command on the draft file, twice in sequence. Each pass is independent; do not skip the second one.
+8. **Append hashtags** — at the bottom of the post body, append the hashtags from step 3 (already includes `#cybersikkerhed`).
+9. **Append credible source link(s)** — bottom line(s) pointing to the primary/authoritative source(s) you verified in step 5. **LinkedIn shortens raw URLs in the rendered post, so a bare link is opaque to the reader.** Every source line MUST therefore name what it points to *before* the URL: `Kilde, <kort beskrivelse af hvad linket er>: <real source URL>`. Describe the kind of source (e.g. official advisory, vendor bulletin, CVE/NVD entry, research paper, regulator, the project's own repo) so a reader knows where the link goes even after LinkedIn collapses it. Examples: `Kilde, forskningsartiklen "Tales of Favicons and Caches" (NDSS): https://…` · `Kilde, NVD-opslag for CVE-2026-1234: https://…` · `Kilde, Microsofts sikkerhedsbulletin: https://…`. Never link the X/Twitter tweet and never credit the handle; the tweet is only a lead.
+10. **Confirm** — print the final draft + media list to the user. Wait for explicit "ja" / "go" / "post". Until v0.2 there is no auto-post.
+11. **Post via Playwright** — drives logged-in Chromium, attaches images, paces with `humanCursor`.
+12. **Record** — call the state writer with `outcome: "posted"` and the LinkedIn URL.
 
 ## Severity shapes
 
 The classifier in `src/cybernews/severity.ts` returns one of `info | notable | critical | zero-day`. Match the LinkedIn shape to it:
 
-- **zero-day** — short and urgent. 1-line headline. 2 bullets (what / who's affected). 1 line CTA ("Patch i dag hvis du kører X."). Hashtags. Link.
-- **critical** — 1 headline + 3-4 sentence summary + 1 line "hvad det betyder" + hashtags + link.
-- **notable** — 4-6 sentence framing. Title-style first line + context + Danish-business-relevance + hashtags + link.
-- **info** — longer educational tone: 6-10 sentences, what & why, action this week, hashtags, link.
+- **zero-day** — short and urgent. 1-line headline. 2 bullets (what / who's affected). 1 line action ("Patch i dag hvis du kører X."). Hashtags. Source link(s).
+- **critical** — 1 headline + 2-3 sentence summary + 1 line "hvad det betyder". Hashtags. Source link(s).
+- **notable** — 3-4 sentence framing: title-style first line + context + Danish-business relevance. Hashtags. Source link(s).
+- **info** — short educational tone: 4-6 sentences covering what & why plus one practical takeaway. Hashtags. Source link(s).
 
-Across all four: no em dashes, no " - " as a pause marker (humanizer-da hard rule).
+Keep every post as short as it can be while still teaching one thing. Across all four: calm and factual (never sensational), no em dashes, no " - " as a pause marker (humanizer-da hard rule), and never link the source tweet.
 
 ## Image style
 
-Every post needs an image. **If the source tweet has its own images, use those** (already downloaded to `state/cybernews/media/<ID>/` by `fetch`). Don't generate a new one; original media is more authentic and respects attribution.
+The visual must match the voice: calm and informative, never alarmist. No scare banners, hazard stripes, red-alert framing, or `ADVARSEL`-style warnings.
 
-**Only when the post has no source images** (e.g. a meta-post about a GitHub repo with no tweet origin), use the house style: **monochrome neon-green line-art on pure black background**, simple flat composition, usually a developer figure (hoodie, round glasses) interacting with topic-specific glyphs. No color, no text, no real brand logos. 16:9.
+A clean factual explainer is a good default: neutral background, a real logo where relevant, a plain headline, and a few verified facts with a `Kilder:` line. **If the source tweet has its own images and they are genuinely the primary-source material**, you may use those (already downloaded to `state/cybernews/media/<ID>/` by `fetch`); otherwise build an original explainer.
+
+For an **abstract** post where no logo or concrete subject fits (e.g. a meta-post about a GitHub repo), the alternative house style is **monochrome neon-green line-art on pure black background**, simple flat composition, usually a developer figure (hoodie, round glasses) interacting with topic-specific glyphs. No color, no text, no real brand logos. 16:9. This stays on the calm, non-alarmist side too.
 
 Boilerplate prompt template to hand to the user (Sora / DALL-E / Midjourney etc.):
 
@@ -81,7 +91,7 @@ Default behavior:
 - `--force` bypasses the daily cap for one run (one-off emergencies — say, a genuine zero-day on a day you've already used your slots).
 
 Pacing rules:
-- **Daily cap: 3 posts per local day** (enforced by both the skill at Step 0.5 and the CLI at runtime).
+- **Daily cap: 3 posts per local day** (enforced by both the skill at Step 0 and the CLI at runtime).
 - **Inter-post pacing: ≥ 2 hours apart.** Closer than that and LinkedIn's burst-detection notices.
 
 The daily cap means at most 3 posts per day. Use `/loop` manually if you want recurring invocations.
@@ -119,7 +129,7 @@ All files ≤ 200 LOC.
 - Do not loosen the 1-post-per-2-hours cap without a stated reason. LinkedIn flags burst posting fast.
 - Do not commit `state/cybernews/`. It contains drafts and downloaded media.
 - Do not automate password / login. Reuse the same `.profile/` dir as the comment cleaner.
-- Image rights: only repost images from public tweets, attribute via "Kilde: <url>".
+- Sourcing & rights: cite credible primary sources (advisory, vendor bulletin, regulator, reputable outlet) via the `Kilde:` line, never the X/Twitter tweet or handle. Prefer original explainer images; only reuse a tweet's image when it is the actual primary-source material you can legitimately credit.
 
 ## When the user says…
 

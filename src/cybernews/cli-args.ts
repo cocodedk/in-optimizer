@@ -20,6 +20,8 @@ export type Args = {
   seed: number;
   dailyCap: number;
   force: boolean;
+  noCache: boolean;
+  cacheTtl: number;
 };
 
 const SEVERITIES: readonly Severity[] = ["info", "notable", "critical", "zero-day"];
@@ -44,6 +46,8 @@ export function parse(argv: string[]): Args {
     seed: Date.now() & 0xffff_ffff,
     dailyCap: 3,
     force: false,
+    noCache: false,
+    cacheTtl: 90 * 60,
   };
   if (!argv[0]) return a;
   const cmd = argv[0];
@@ -55,6 +59,8 @@ export function parse(argv: string[]): Args {
     else if (v === "--headless") a.headless = true;
     else if (v === "--dry-run") a.dryRun = true;
     else if (v === "--force") a.force = true;
+    else if (v === "--no-cache") a.noCache = true;
+    else if (v.startsWith("--cache-ttl=")) a.cacheTtl = Number(v.slice(12));
     else if (v.startsWith("--daily-cap=")) a.dailyCap = Number(v.slice(12));
     else if (v.startsWith("--handle=")) a.handle = v.slice(9);
     else if (v.startsWith("--id=")) a.id = v.slice(5);
@@ -77,6 +83,8 @@ Usage:
         [--handle=IntCyberDigest]
         [--state-dir=state/cybernews]
         [--limit=20]
+        [--cache-ttl=5400]             cache TTL in seconds (default 90min)
+        [--no-cache]                   skip cache; always hit endpoint
         [--json]
   cyber-news fetch --id=TWEETID        fetch one tweet (text + media), print classification
         [--media-out=DIR]              also download media files into DIR

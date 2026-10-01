@@ -2,7 +2,7 @@
  * LinkedIn composer selectors for posting from /feed/.
  *
  * Source-of-truth: docs/cybernews-selectors-li.md.
- * Last verified live: 2026-04-30.
+ * Last verified live: 2026-04-30 (composer); 2026-06-03 (recent-activity permalink).
  *
  * Strategy: prefer structural selectors with stable classes
  * (`share-box-*`, `share-creation-state-*`); fall back to ARIA / text where
@@ -10,6 +10,13 @@
  */
 
 export const FEED_URL = "https://www.linkedin.com/feed/";
+
+/**
+ * The author's own activity feed. `/in/me/` resolves to the logged-in user,
+ * so this is the canonical, deterministic place to read the permalink of a
+ * post we just made — independent of the ephemeral success toast.
+ */
+export const RECENT_ACTIVITY_URL = "https://www.linkedin.com/in/me/recent-activity/all/";
 
 export const LI_SELECTORS = {
   /**
@@ -111,17 +118,24 @@ export const LI_SELECTORS = {
     '[role="dialog"] button.artdeco-button--primary:has-text("Indlæg")',
 
   /**
-   * After submit, the composer dialog closes and a toast may appear at the
-   * bottom of the feed. We capture the new post URL via the toast link.
+   * Fast path: after submit, a toast may appear at the bottom of the feed
+   * with a "View post" link. This is ephemeral and timing-sensitive, so it
+   * is only the first attempt; `activityPermalink` is the reliable fallback.
+   * Matched loosely (any href carrying the activity URN) and normalized in
+   * post-result.ts.
    */
   postedToast:
-    '.artdeco-toasts a[href*="/feed/update/urn:li:activity:"], ' +
-    '[role="status"] a[href*="/feed/update/urn:li:activity:"]',
+    '.artdeco-toasts a[href*="urn:li:activity:"], ' +
+    '[role="status"] a[href*="urn:li:activity:"]',
 
   /**
-   * As a fallback, the new post appears at the top of the user's feed with
-   * a permalink anchor inside the post header.
+   * Deterministic capture on the author's /in/me/recent-activity/all/ page:
+   * every post exposes its activity URN through a permalink anchor, with the
+   * newest post first. As of 2026-06-03 the live href shape is
+   * `/analytics/post-summary/urn:li:activity:<id>/` (NOT `/feed/update/...`),
+   * so we match `urn:li:activity:` in ANY href and normalize to the canonical
+   * permalink in post-result.ts. Mirrors the comment-cleaner, which resolves
+   * activity URNs from the same recent-activity surface.
    */
-  feedFirstPostPermalink:
-    'main [data-urn^="urn:li:activity:"] a[href*="/feed/update/urn:li:activity:"]',
+  activityPermalink: 'a[href*="urn:li:activity:"]',
 } as const;

@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+
+remote="$1"
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+  branch="${remote_ref#refs/heads/}"
+  if [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
+    echo "ERROR: Pushing to $branch is blocked. Use a feature branch + PR."
+    exit 1
+  fi
+done
+
+exit 0
